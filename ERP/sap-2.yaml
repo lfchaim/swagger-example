@@ -1,0 +1,641 @@
+openapi: 3.0.1
+
+info:
+  title: 'SAP PO BLL services for SAP Commerce communications'
+  description: 'BLL services exposed by SAP PO for SAP Commerce to connect with backend ERP systems.'
+  contact:
+    name: ': SAP PO support team'
+    email: BSH_F_SAP-PO-Support@bshg.com
+  version: '1.1.0'
+  
+servers:
+  - url: 'https://testeai.bsh-partner.com/D2C/RESTAdapter/BLL'
+    description: 'Test environment server.'
+    
+security:
+  - basicAuth: []
+
+tags:
+  - name: Order
+  - name: Availability
+
+paths:
+
+  /Order/:
+  
+    parameters:
+      - $ref: '#/components/parameters/x-sender'
+      - $ref: '#/components/parameters/x-message-id'
+      - $ref: '#/components/parameters/x-timestamp'
+      - $ref: '#/components/parameters/x-brand'
+      - $ref: '#/components/parameters/x-country'
+      - $ref: '#/components/parameters/x-channel'
+      - $ref: '#/components/parameters/x-website'
+      - $ref: '#/components/parameters/x-language'
+
+    post:
+      operationId: postOrder
+      summary: 'Create an Order in the backend ERP system.'
+      tags:
+        - Order
+      
+      requestBody:
+        $ref: '#/components/requestBodies/requestBodyOrderPOST'
+        
+      responses:      
+        default:
+          $ref: '#/components/responses/responseBackendResultId'
+      
+  /Availability/:
+  
+    parameters:
+      - $ref: '#/components/parameters/x-sender'
+      - $ref: '#/components/parameters/x-message-id'
+      - $ref: '#/components/parameters/x-timestamp'
+      - $ref: '#/components/parameters/x-brand'
+      - $ref: '#/components/parameters/x-country'
+      - $ref: '#/components/parameters/x-channel'
+      - $ref: '#/components/parameters/x-website'
+      - $ref: '#/components/parameters/x-language'
+
+    get:
+      operationId: getAvailability
+      summary: 'Get availability for a list of products from the backend ERP system.'
+      tags:
+        - Availability
+      
+      parameters:
+        - $ref: '#/components/parameters/products'
+        
+      responses:      
+        default:
+          $ref: '#/components/responses/responseProductsAvailability'
+      
+components:
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+  parameters:
+    x-sender:
+      name: X-Sender
+      in: header
+      description: 'Sender of the message.'
+      schema:
+        type: string
+      example: 'SAP Commerce - MUC - Prod'
+    
+    x-message-id:
+      name: X-Message-Id
+      in: header
+      description: 'An UUID for uniquely identifying the message.'
+      schema:
+        type: string
+      example: '123e4567-e89b-12d3-a456-426655440000'
+
+    x-timestamp:        
+      name: X-Timestamp
+      in: header
+      description: 'Time when message was created at origin (UTC with ISO 8601).'
+      schema:
+        type: string
+      example: '2021-01-14T17:59:59.123Z'
+
+    x-brand:
+      name: X-Brand
+      in: header
+      description: 'Brand of the order.'
+      schema:
+        type: string
+      example: 'A01'
+    
+    x-country:
+      name: X-Country
+      in: header
+      description: 'Country of the order.'
+      schema:
+        type: string
+      example: 'AT'
+    
+    x-channel:
+      name: X-Channel
+      in: header
+      description: 'Channel of the order.'
+      schema:
+        type: string
+      example: 'B2C'
+    
+    x-website:
+      name: X-Website
+      in: header
+      description: 'Website of the order.'
+      schema:
+        type: string
+      example: 'boschat'
+    
+    x-language:
+      name: X-Language
+      in: header
+      description: 'Language of the order (ISO 639-1).'
+      schema:
+        type: string
+      example: 'de'
+  
+    products:
+      name: products
+      in: query
+      description: 'List of product codes separated by commas.'
+      schema:
+        type: string
+      example: 'MBA5785S6B,WNA13400ES,00311918'
+  
+  requestBodies:
+  
+    requestBodyOrderPOST:
+      description: 'Request body for Order POST.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/order'
+  
+  responses:
+
+    responseBackendResultId:
+      description: 'Response contains a backend result identifier.'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: '#/components/schemas/responseStatus'
+              data:
+                type: object
+                properties:
+                  backendResultId:
+                    type: string
+                    example: '94654621'
+              messages:
+                $ref: '#/components/schemas/responseMessages'
+  
+    responseProductsAvailability:
+      description: 'Response contains a list of product availability info.'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: '#/components/schemas/responseStatus'
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/productAvailability'
+              messages:
+                $ref: '#/components/schemas/responseMessages'
+
+  schemas:
+  
+    responseStatus:
+      type: string
+      example: 'Error'
+
+    responseMessages:
+      type: array
+      items:
+        properties:
+          category:
+            type: string
+            example: 'Error'
+          code:
+            type: string
+            example: 'CANNOT_DETERMINE_RECEIVER'
+          description:
+            type: string
+            example: 'The receiver can''t be determined based on the country.'
+  
+    order:
+      type: object
+      properties:
+        orderNumber:
+          type: string
+          example: '9098986564'
+        partOrderNumber:
+          type: string
+          example: '9098986564-0'
+        orderDate:
+          type: string
+          example: '2021-01-14T17:59:59.123Z'
+        orderOwner:
+          type: string
+          example: '15345345'
+        cartClassification:
+          type: string
+          example: 'SO'
+        userGroup:
+          type: string
+          example: '7XX'
+        email:
+          type: string
+          example: 'consumer@mail.com'
+        totalPrice:
+          type: number
+          example: 999.99
+        currency:
+          type: string
+          example: 'EUR'
+        consumer:
+          $ref: '#/components/schemas/orderConsumer'
+        billingAddress:
+          $ref: '#/components/schemas/address'
+        deliveries:
+          type: array
+          items:
+            $ref: '#/components/schemas/orderDelivery'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/orderPayment'
+        orderEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/orderEntry'
+        discounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/discount'
+        surcharges:
+          type: array
+          items:
+            $ref: '#/components/schemas/surcharge'
+        additionalInfo:
+          $ref: '#/components/schemas/orderAdditionalInfo'
+      
+    orderConsumer:
+      type: object
+      properties:
+        consumerId:
+          type: string
+          example: '12456536'
+        userName:
+          type: string
+          example: 'consumer@mail.com'
+        personalNumber:
+          type: string
+          example: 'XX0234234'
+        department:
+          type: string
+          example: 'DE2345.2'
+      
+    address:
+      type: object
+      properties:
+        titleCode:
+          type: string
+          example: '0003'
+        titleName:
+          type: string
+          example: 'Mr.'
+        firstName:
+          type: string
+          example: 'Name'
+        middleName:
+          type: string
+          example: 'Middle'
+        lastName:
+          type: string
+          example: 'Surname'
+        streetName:
+          type: string
+          example: 'Test street'
+        streetName2:
+          type: string
+          example: 'Test street 2'
+        streetName3:
+          type: string
+          example: 'Test street 3'
+        streetName4:
+          type: string
+          example: 'Test street 4'
+        streetName5:
+          type: string
+          example: 'Test street 5'
+        streetNumber:
+          type: string
+          example: '123A'
+        streetNumber2:
+          type: string
+          example: '321B'
+        building:
+          type: string
+          example: 'Test building'
+        floor:
+          type: string
+          example: 'Test floor'
+        appartment:
+          type: string
+          example: 'Test appartment'
+        postalCode:
+          type: string
+          example: '12345'
+        district:
+          type: string
+          example: 'Test district'
+        town:
+          type: string
+          example: 'Test town'
+        regionCode:
+          type: string
+          example: 'ES_38'
+        regionName:
+          type: string
+          example: 'Sta. Cruz de Tenerife'
+        countryCode:
+          type: string
+          example: 'ES'
+        countryName:
+          type: string
+          example: 'España'
+        phone1:
+          type: string
+          example: '612345678'
+        phone2:
+          type: string
+          example: '976123456'
+        taxNumber:
+          type: string
+          example: '12345678-A'
+        taxOffice:
+          type: string
+          example: 'Test tax office'
+        company:
+          type: string
+          example: 'BSH'
+          
+    orderDelivery:
+      type: object
+      properties:
+        deliveryId:
+          type: integer
+          example: 1
+        deliveryMode:
+          type: string
+          example: 'boschuk_mdaStandardDelivery'
+        backendCode:
+          type: string
+          example: '10'
+        deliveryCost:
+          type: number
+          example: 3.99
+        deliveryCostBasisPrice:
+          type: number
+          example: 3.99
+        requestedDeliveryDate:
+          type: string
+          example: '2021-01-14T17:59:59.123Z'
+        deliveryText:
+          type: string
+          example: 'Please deliver after 10:00 AM.'
+        deliveryAddress:
+          $ref: '#/components/schemas/address'
+      
+    orderPayment:
+      type: object
+      properties:
+        paymentId:
+          type: integer
+          example: 1
+        paymentMode:
+          type: string
+          example: 'boschuk_mastercard'
+        backendCode:
+          type: string
+          example: '50'
+        transactionId:
+          type: string
+          example: '53429452341'
+        transactionDate:
+          type: string
+          example: '2021-01-14T17:59:59.123Z'
+        merchantCode:
+          type: string
+          example: 'BSHXXADFB'
+        paymentMethod:
+          type: string
+          example: 'mastercard'
+        status:
+          type: string
+          example: 'PAID'
+        amount:
+          type: number
+          example: 999.99
+        currency:
+          type: string
+          example: 'EUR'
+        cardData:
+          $ref: '#/components/schemas/cardData'
+        bankData:
+          $ref: '#/components/schemas/bankData'
+        shopperReference:
+          type: string
+          example: '12456536'
+        pspReference:
+          type: string
+          example: 'WP13252312'
+        recurringDetailReference:
+          type: string
+          example: '689498497'
+        paymentChannel:
+          type: string
+          example: 'card'
+          
+    orderEntry:
+      type: object
+      properties:
+        orderEntryNumber:
+          type: integer
+          example: 1
+        productCode:
+          type: string
+          example: 'MBA5785S6B'
+        quantity:
+          type: integer
+          example: 2
+        grossUnitPrice:
+          type: number
+          example: 500
+        grossTotalPrice:
+          type: number
+          example: 10000
+        basisPrice:
+          type: number
+          example: 500
+        discounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/discount'
+        surcharges:
+          type: array
+          items:
+            $ref: '#/components/schemas/surcharge'
+        warehouseBackendCode:
+          type: string
+          example: 'ES14'
+        availabilityInfo:
+          type: string
+          example: 'G11'
+        ownerOrderEntryNumber:
+          type: integer
+          example: 5
+        cewInfo:
+          $ref: '#/components/schemas/cewInfo'
+      
+    discount:
+      type: object
+      properties:
+        amount:
+          type: number
+          example: 10.1
+        type:
+          type: string
+          example: 'Promotion'
+        code:
+          type: string
+          example: 'bosch_promo_2020'
+        description:
+          type: string
+          example: 'Christmas coupon offer!'
+        coupon:
+          type: string
+          example: 'XJ34-F2DF-WER2-SDFG'
+      
+    surcharge:
+      type: object
+      properties:
+        amount:
+          type: number
+          example: 10.1
+        type:
+          type: string
+          example: 'Surcharge'
+        code:
+          type: string
+          example: 'bosches_packaging'
+        description:
+          type: string
+          example: 'Gift packaging'
+          
+    orderAdditionalInfo:
+      type: object
+      properties:
+        campaignId:
+          type: string
+          example: 'campaignX'
+        invoiceType:
+          type: string
+          example: 'InvoiceY'
+        internalComment:
+          type: string
+          example: 'This is a private internal comment'
+        commentForConsumer:
+          type: string
+          example: 'This is a public comment for the customer'
+          
+    cardData:
+      type: object
+      properties:
+        cardNumber:
+          type: string
+          example: '23*******234'
+        cardExpiryDate:
+          type: string
+          example: '2023-01-31'
+        cvcResultCode:
+          type: string
+          example: 'SUCCESS'
+        avsResultCode:
+          type: string
+          example: 'SUCCESS'
+
+    bankData:
+      type: object
+      properties:
+        country:
+          type: string
+          example: 'ES'
+        bankName:
+          type: string
+          example: 'Bank for testing'
+        swift:
+          type: string
+          example: 'BFT2342'
+        accountHolder:
+          type: string
+          example: 'Name Last names'
+        accountNumber:
+          type: string
+          example: '2323234235235235'
+        sepaMandate:
+          type: string
+          example: '32423523'
+
+    cewInfo:
+      type: object
+      properties:
+        eNumber:
+          type: string
+          example: 'MBA5785S6B/01'
+        fdDate:
+          type: string
+          example: '9903'
+        serialNumber:
+          type: string
+          example: '1234569'
+        purchaseDate:
+          type: string
+          example: '2020-12-31'
+        installationDate:
+          type: string
+          example: '2020-12-31'
+        instructionDate:
+          type: string
+          example: '2020-12-31'
+        dealerName:
+          type: string
+          example: 'Dealer XXX'
+
+    productAvailability:
+      type: object
+      properties:
+        product:
+          type: string
+          example: 'MBA5785S6B'
+        cartClassification:
+          type: string
+          example: 'SO'
+        channel:
+          type: string
+          example: 'B2C'
+        storageLocation:
+          type: string
+          example: 'ES14'
+        inStockStatus:
+          type: string
+          example: 'G11'
+        storeControl:
+          type: integer
+          example: 0
+        availableAmount:
+          type: integer
+          example: 7
+        express:
+          type: boolean
+          example: true
+        estimatedTimeAvailable:
+          type: string
+          example: '2020-12-31'
+        additionalInfo:
+          type: string
+          example: 'More stock will be received by end of year.'
