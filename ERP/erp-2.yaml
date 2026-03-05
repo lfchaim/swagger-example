@@ -1,0 +1,294 @@
+openapi: '3.0.3'
+info:
+  title: 'ERP Endpoints'
+  description: 'The endpoints details for integration of ERP with PMS & LMS'
+  version: 1.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/NELSONKIP_1/ERP-ENDPOINTS-RIVER-PALLA/1.0.0
+  - url: https://techsavanna.technology/river-court-palla/api/endpoints
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    gl-account:
+      # Definition of a "BANK ACCOUNT" object
+      type: object
+      properties:
+        account_code:
+          type: string
+        account_code2:
+          type: string
+        account_name:
+          type: string
+        account_type:
+          type: string
+      required:
+        - "account_code"
+        - "account_name"
+        - "account_type"
+      example:
+        account_code: "1600"
+        account_code2: ""
+        account_name: "test account"
+        account_type: "4"
+        action: "get-bank-account-code"
+        company-id: "PALLA"
+
+    Invoice:
+      # Definition of a "Invoice" object
+      type: object
+      properties:
+        InvoiceNo:
+          type: string
+        CustId:
+          type: string
+        RefNo:
+          type: string
+        comments:
+          type: string
+        OrderDate:
+          type: string
+        DeliverTo:
+          type: string
+        DeliveryAddress:
+          type: string  
+        DeliveryCost:
+          type: string  
+        DeliveryDate:
+          type: string
+        InvoiceTotal:
+          type: string
+        PhysicalAddress:
+          type: string
+        DueDate:
+          type: string
+        items:
+          type: string
+        action:
+          type: string
+        company-id:
+          type: string
+      required:
+        - "InvoiceNo"
+        - "CustId"
+        - "RefNo"
+        - "OrderDate"
+        - "DeliverTo"
+        - "InvoiceTotal"
+        - "PhysicalAddress"
+      example:
+        InvoiceNo: "155287"
+        CustId: "4126"
+        RefNo: false
+        comments: "na"
+        OrderDate: "2022-09-26"  
+        DeliverTo: "jjj kkk" 
+        DeliveryAddress: "palla" 
+        DeliveryCost: "0" 
+        DeliveryDate: "2022-09-26" 
+        InvoiceTotal: "4500"
+        PhysicalAddress: "0" 
+        DueDate: "2022-09-31" 
+        Items: ""
+        action: "add-invoice"
+        company-id: "PALLA"
+    Payment:
+      # Definition of a "Payment" object
+      type: object
+      properties:
+        CustId :
+          type: string
+        TransactionRef:
+          type: string
+        TransDate :
+          type: string
+        BankAcct:
+          type: string
+        Amount:
+          type: string
+        action:
+          type: string
+        company-id:
+          type: string
+      required:
+        - "CustId"
+        - "TransactionRef"
+        - "TransDate"
+        - "BankAcct"
+        - "Amount"
+      example:
+        CustId: "4563"
+        TransactionRef: "false"
+        TransDate: "2022-09-26"
+        BankAcct: "103"
+        Amount: "1100.00"
+        action: "make-payment"
+        company-id: "PALLA"
+    Journal:
+      # Definition of a "Journal" object
+      type: object
+      properties:
+        currency:
+          type: string
+        source_ref:
+          type: string
+        reference:
+          type: string
+        memo:
+          type: string
+        amount:
+          type: string
+        bank_act:
+          type: string
+        items:
+          type: string
+        company-id:
+          type: string
+      required:
+        - "currency"
+        - "source_ref"
+        - "reference"
+        - "memo"
+        - "bank_act"
+      example:
+        currency: "KS"
+        source_ref: "67"
+        reference: "67"
+        memo: "journal entry for landlord payment"
+        amount: "10000.00"  
+        bank_act: "jjj kkk" 
+        items: #/components/schemas/ -account
+        action: "add-journal"
+        company-id: "PALLA"    
+paths:
+  
+  /bank_account.php:
+    post:
+      # POST /bank_account.php
+      description: 'Add a new bank account to the ERP'
+      parameters:
+        - name: action
+          in: query
+          description: 'query paramater'
+          required: true
+          schema:
+            type: string
+        - name: company-id
+          in: query
+          description: 'query paramater'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Details of the Account to add
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/gl-account'
+      responses:
+        '201':
+          description: 'account successfully added to the ERP'      
+        '401':
+          description: 'Non authorized to do this operation'  
+        '400':
+          description: 'Bad request'    
+  
+  /payment.php:
+    post:
+      # POST /payment.php
+      description: 'Add a new payment to the ERP'
+      parameters:
+        - name: action
+          in: query
+          description: 'query paramater'
+          required: true
+          schema:
+            type: string
+        - name: company-id
+          in: query
+          description: 'query paramater'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Details of the Payment to add
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Payment'
+      responses:
+        '201':
+          description: 'account successfully added to the ERP'      
+        '401':
+          description: 'Non authorized to do this operation'  
+        '400':
+          description: 'Bad request' 
+  /invoice.php:
+    post:
+      # POST /payment.php
+      description: 'Add a new invoice to the ERP'
+      parameters:
+        - name: action
+          in: query
+          description: 'query paramater'
+          required: true
+          schema:
+            type: string
+        - name: company-id
+          in: query
+          description: 'query paramater'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Details of the Payment to add
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Invoice'
+      responses:
+        '201':
+          description: 'invoice successfully added to the ERP'      
+        '401':
+          description: 'Non authorized to do this operation'  
+        '400':
+          description: 'Bad request' 
+  /journal.php:
+    post:
+      # POST /journal.php
+      description: 'Add a new journal to the ERP'
+      parameters:
+        - name: action
+          in: query
+          description: 'query paramater'
+          required: true
+          schema:
+            type: string
+        - name: company-id
+          in: query
+          description: 'query paramater'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Details of the Journal to add
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Journal'
+      responses:
+        '201':
+          description: 'invoice successfully added to the ERP'      
+        '401':
+          description: 'Non authorized to do this operation'  
+        '400':
+          description: 'Bad request'
