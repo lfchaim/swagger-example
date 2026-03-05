@@ -1,0 +1,449 @@
+openapi: 3.0.0
+info:
+  title: SAP S/4HANA Material Management Hooks API
+  description: |
+    **SAP S/4HANA Material Management API**
+
+    An API for external applications to asynchronously receive event-driven notifications or results from SAP S/4HANA.
+
+    ** Avaliable Hook APIs:**
+    1. Return the result after a goods receipts is created in SAP
+    2. Return the result after a goods issues is created in SAP
+  version: V1
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: 'https://virtserver.swaggerhub.com/btg-fa5/WebHook/V1'
+  - url: 'https://{host-name}/{project}/{sap-system}/v1'
+    variables:
+      host-name:
+        default: devapi.betagro.com # Replace with your actual hostname
+        description: The host name of your SAP API Gateway or proxy.
+      project:
+        default: std-api # Replace with your actual project name
+        description: The project path for your SAP integration.
+      sap-system:
+        default: erpdev # Replace with your actual SAP system identifier
+        description: 'The identifier for your SAP S/4HANA 1610 system (e.g., ERP).'
+tags:
+  - name: Goods Receipts Hooks
+    description: Endpoints for SAP to send goods-receipts creation results to originating applications.
+  - name: Goods Issues Hooks
+    description: Endpoints for SAP to send goods-issues creation results to originating applications.
+  - name: Goods Movement Cancellations Hooks
+    description: Endpoints for SAP to send goods movement cancellations creation results to originating applications.
+  - name: Goods Movement Physical-Inventories Hooks
+    description: Endpoints for SAP to send goods movement physical-inventories creation results to originating applications.
+paths:
+  '/v1/material-mgmt/hooks/inventories/goods-movements/goods-receipts/creations/{appid}':
+    post:
+      tags:
+        - Goods Receipts Hooks
+      summary: Send Goods Receipts Creation Result
+      description: This endpoint is called by SAP S/4HANA to send the result of a goods-receipts creation back to the originating application.
+      parameters:
+        - name: appid
+          in: path
+          description: Application ID (Registered with SAP) of the originating system.
+          required: true
+          schema:
+            type: string
+            maxLength: 20
+        - name: apikey
+          in: header
+          description: Authentication Token for API Gateway.
+          required: true
+          schema:
+            type: string
+            maxLength: 60
+        - name: authorization
+          in: header
+          description: Basic authentication to access the target endpoint (for the originating application's endpoint).
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+        - name: Content-Type
+          in: header
+          description: Specifies the request body format.
+          required: true
+          schema:
+            type: string
+            enum:
+              - application/json
+          example: application/json
+      requestBody:
+        description: Goods Receipts creation result data sent from SAP.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoodsReceiptsResultReq'
+      responses:
+        '200':
+          description: Successfully received and processed the goods receipts result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesOrderResultResponse'
+        '400':
+          description: Bad Request - Invalid input or missing required fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - E
+                    description: Error status.
+                  message:
+                    type: string
+                    description: Detailed error message.
+        '401':
+          description: Unauthorized - Missing or invalid API key/authorization.
+        '500':
+          description: Internal Server Error - An unexpected error occurred on the receiving application's side.
+  '/v1/material-mgmt/hooks/inventories/goods-movements/goods-issues/creations/{appid}':
+    post:
+      tags:
+        - Goods Issues Hooks
+      summary: Send Goods Issues Creation Result
+      description: This endpoint is called by SAP S/4HANA to send the result of a goods-issues creation back to the originating application.
+      parameters:
+        - name: appid
+          in: path
+          description: Application ID (Registered with SAP) of the originating system.
+          required: true
+          schema:
+            type: string
+            maxLength: 20
+        - name: apikey
+          in: header
+          description: Authentication Token for API Gateway.
+          required: true
+          schema:
+            type: string
+            maxLength: 60
+        - name: authorization
+          in: header
+          description: Basic authentication to access the target endpoint (for the originating application's endpoint).
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+        - name: Content-Type
+          in: header
+          description: Specifies the request body format.
+          required: true
+          schema:
+            type: string
+            enum:
+              - application/json
+          example: application/json
+      requestBody:
+        description: Goods Issues creation result data sent from SAP.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoodsReceiptsResultReq'
+      responses:
+        '200':
+          description: Successfully received and processed the goods issues result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesOrderResultResponse'
+        '400':
+          description: Bad Request - Invalid input or missing required fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - E
+                    description: Error status.
+                  message:
+                    type: string
+                    description: Detailed error message.
+        '401':
+          description: Unauthorized - Missing or invalid API key/authorization.
+        '500':
+          description: Internal Server Error - An unexpected error occurred on the receiving application's side.
+  '/v1/material-mgmt/hooks/inventories/goods-movements/transfer-stocks/creations/{appid}':
+    post:
+      tags:
+        - Goods Movement Cancellations Hooks
+      summary: Send Goods Issues Creation Result
+      description: This endpoint is called by SAP S/4HANA to send the result of a goods-issues creation back to the originating application.
+      parameters:
+        - name: appid
+          in: path
+          description: Application ID (Registered with SAP) of the originating system.
+          required: true
+          schema:
+            type: string
+            maxLength: 20
+        - name: apikey
+          in: header
+          description: Authentication Token for API Gateway.
+          required: true
+          schema:
+            type: string
+            maxLength: 60
+        - name: authorization
+          in: header
+          description: Basic authentication to access the target endpoint (for the originating application's endpoint).
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+        - name: Content-Type
+          in: header
+          description: Specifies the request body format.
+          required: true
+          schema:
+            type: string
+            enum:
+              - application/json
+          example: application/json
+      requestBody:
+        description: Goods Issues creation result data sent from SAP.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GMVT-CancelResultReq'
+      responses:
+        '200':
+          description: Successfully received and processed the goods issues result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GMVT-CancelResp'
+        '400':
+          description: Bad Request - Invalid input or missing required fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - E
+                    description: Error status.
+                  message:
+                    type: string
+                    description: Detailed error message.
+        '401':
+          description: Unauthorized - Missing or invalid API key/authorization.
+        '500':
+          description: Internal Server Error - An unexpected error occurred on the receiving application's side.
+  '/v1/material-mgmt/hooks/inventories/goods-movements/physical-inventories/creatio/{appid}':
+    post:
+      tags:
+        - Goods Movement Physical-Inventories Hooks
+      summary: Send Goods Issues Creation Result
+      description: This endpoint is called by SAP S/4HANA to send the result of a physical-inventories creation back to the originating application.
+      parameters:
+        - name: appid
+          in: path
+          description: Application ID (Registered with SAP) of the originating system.
+          required: true
+          schema:
+            type: string
+            maxLength: 20
+        - name: apikey
+          in: header
+          description: Authentication Token for API Gateway.
+          required: true
+          schema:
+            type: string
+            maxLength: 60
+        - name: authorization
+          in: header
+          description: Basic authentication to access the target endpoint (for the originating application's endpoint).
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+        - name: Content-Type
+          in: header
+          description: Specifies the request body format.
+          required: true
+          schema:
+            type: string
+            enum:
+              - application/json
+          example: application/json
+      requestBody:
+        description: Physical Inventories creation result data sent from SAP.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GMVT-CancelResultReq'
+      responses:
+        '200':
+          description: Successfully received and processed the physical-inventories result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GMVT-CancelResp'
+        '400':
+          description: Bad Request - Invalid input or missing required fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - E
+                    description: Error status.
+                  message:
+                    type: string
+                    description: Detailed error message.
+        '401':
+          description: Unauthorized - Missing or invalid API key/authorization.
+        '500':
+          description: Internal Server Error - An unexpected error occurred on the receiving application's side.
+components:
+  schemas:
+    SalesOrderResultResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: 'Status of the acknowledgment from the receiving application (S for Success, E for Error).'
+          enum:
+            - S
+            - E
+          example: S
+        message:
+          type: string
+          description: Optional message regarding the acknowledgment.
+          example: Result received successfully.
+    GoodsReceiptsResultReq:
+      type: object
+      properties:
+        appId:
+          type: string
+        returnMessage:
+          type: array
+          items:
+            type: object
+            properties:
+              appReferenceNo:
+                type: string
+              status:
+                type: string
+              message:
+                type: string
+              documentNumber:
+                type: string
+              messages:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    sequence:
+                      type: integer
+                    messageType:
+                      type: string
+                    message:
+                      type: string
+                    messageV1:
+                      type: string
+                    messageV2:
+                      type: string
+                    messageV3:
+                      type: string
+                    messageV4:
+                      type: string
+      x-examples:
+        Example 1:
+          appId: TOMS-KETSH-01
+          returnMessage:
+            - appReferenceNo: GI-2400002
+              status: ''
+              message: ''
+              documentNumber: ''
+              messages:
+                - sequence: 1
+                  messageType: ''
+                  message: .
+                  messageV1: ''
+                  messageV2: ''
+                  messageV3: ''
+                  messageV4: ''
+    GMVT-CancelResultReq:
+      type: object
+      properties:
+        returnData:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              requestRef:
+                type: string
+              docNo:
+                type: string
+              docYear:
+                type: integer
+              msgReturn:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+      x-examples:
+        Example 1:
+          returnData:
+            - status: E
+              requestRef: CC-000001
+              docNo: ''
+              docYear: 0
+              msgReturn:
+                - message: Matdoc no is initial
+                - message: Matdoc year is initial
+                - message: 'Matdoc year is initial,Matdoc no is initial ,Matdoc year is initial'
+    GMVT-CancelResp:
+      type: object
+      properties:
+        message:
+          type: string
+        result:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+        status:
+          type: integer
+        code:
+          type: string
+        traceLogCode:
+          type: string
+      x-examples:
+        Example 1:
+          message: success
+          result:
+            success: true
+            message: Transaction Incomplete!
+          status: 1
+          code: ''
+          traceLogCode: HXF2DUKO
