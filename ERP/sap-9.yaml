@@ -1,0 +1,423 @@
+swagger: '2.0'
+info:
+  title: Activity Confirmation
+  description: >-
+    This service enables you to post activity confirmations in SAP Digital
+    Manufacturing Cloud. The activity confirmations will be synchronized to the
+    integrated ERP systems.
+  version: v1
+  contact:
+    name: SAP Digital Manufacturing Operations
+    email: sap-dmoperation@sap.com
+host: hostname
+basePath: /
+schemes:
+  - https
+securityDefinitions:
+  OauthSecurity:
+    type: oauth2
+    tokenUrl: https://{subdomain}.authentication.{regionHost}/oauth/token
+    flow: application
+security:
+  - OauthSecurity: []
+produces:
+  - application/json
+consumes:
+  - application/json
+tags:
+  - name: Activity Confirmation
+paths:
+  /activityConfirmation/v1/confirm:
+    post:
+      tags:
+        - Activity Confirmation
+      summary: Post activity confirmations.
+      description: >-
+        Post activity confirmations for an operation activity, SFC, order
+        executed at a given workcenter and plant.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Request object to confirm activities.
+          required: true
+          schema:
+            $ref: '#/definitions/ActivityConfirmationPublicAPIRequest'
+      responses:
+        '200':
+          description: Activity confirmation has been completed successfully.
+          schema:
+            $ref: '#/definitions/ActivityConfirmationPublicAPIResponse'
+        '400':
+          description: >-
+            The HTTP request is bad or invalid and cannot be processed by the
+            server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: You are not authorized to call this resource.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: Accessing the resource you are trying to reach is forbidden.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: One of the related elements is not found.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: There was an internal error somewhere in the call chain.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /activityConfirmation/v1/autoconfirm:
+    post:
+      tags:
+        - Activity Confirmation
+      summary: Confirms activities automatically.
+      description: >-
+        Confirms activities for the parameters provided as input by
+        automatically calculating the standard values. The standard values are
+        calculated based on the elapsed operation time, on a simple prorated
+        basis.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Request object to confirm activities.
+          required: true
+          schema:
+            $ref: '#/definitions/AutoActivityConfirmationRequest'
+      responses:
+        '200':
+          description: Automated Activity confirmation has been completed successfully.
+          schema:
+            $ref: '#/definitions/AutoActivityConfirmationResponse'
+        '400':
+          description: >-
+            The HTTP request is bad or invalid and cannot be processed by the
+            server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: You are not authorized to call this resource.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: Accessing the resource you are trying to reach is forbidden.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: One of the related elements is not found.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: There was an internal error somewhere in the call chain.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /activityConfirmation/v1/postings/summary:
+    get:
+      tags:
+        - Activity Confirmation
+      summary: Retrieves posting summary.
+      description: >-
+        Retreives the activity confirmation posting summary for the specified
+        operation activity. 
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Request object to retrive posting summary.
+          required: true
+          schema:
+            $ref: '#/definitions/ActivityConfirmationSummaryPublicAPIRequest'
+      responses:
+        '200':
+          description: >-
+            Activity confirmation posting summary has been retrieved
+            successfully.
+          schema:
+            $ref: '#/definitions/ActivityConfirmationPublicAPIResponse'
+        '400':
+          description: >-
+            The HTTP request is bad or invalid and cannot be processed by the
+            server.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: You are not authorized to call this resource.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: Accessing the resource you are trying to reach is forbidden.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: One of the related elements is not found.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: There was an internal error somewhere in the call chain.
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+definitions:
+  AutoActivityConfirmationRequest:
+    type: object
+    description: Request object to confirm activities.
+    required:
+      - plant
+      - shopOrder
+      - sfc
+      - operationActivity
+      - operationActivityVersion
+      - stepId
+      - workCenter
+      - resource
+      - routingId
+      - postedBy
+      - postingDateTime
+    properties:
+      plant:
+        type: string
+        description: Plant where activity confirmation has to be performed.
+      shopOrder:
+        type: string
+        description: Shop Order for which activity confirmation has to be performed.
+      sfc:
+        type: string
+        description: Sfc at which activity confirmation has to be performed.
+      operationActivity:
+        description: >-
+          Operation Activity for which activity confirmation has to be
+          performed.
+        type: string
+      operationActivityVersion:
+        description: >-
+          Operation Activity Version for which activity confirmation has to be
+          performed.
+        type: string
+      stepId:
+        description: Step Identifier for which activity confirmation has to be performed.
+        type: string
+      workCenter:
+        description: Work center for which activity confirmation has to be performed.
+        type: string
+      resource:
+        description: Resource for which activity confirmation has to be performed.
+        type: string
+      routingId:
+        description: Routing for which activity confirmation has to be performed.
+        type: string
+      finalConfirmation:
+        description: >-
+          Send final confirmation when posting the activities. The default value
+          is false.
+        type: boolean
+      postConfirmationToErp:
+        description: Post activity confirmations to ERP. The default value is false.
+        type: boolean
+      postedBy:
+        description: ID of the user who posted the activity confirmation.
+        type: string
+      postingDateTime:
+        description: Activity confirmation posting date and time, UTC.
+        type: string
+  AutoActivityConfirmationResponse:
+    type: array
+    description: Response object of activity confirmation.
+    items:
+      $ref: '#/definitions/AutoActivityConfirmation'
+  AutoActivityConfirmation:
+    type: object
+    description: Activity confirmation.
+    properties:
+      activityId:
+        description: Activity ID.
+        type: string
+      quantity:
+        description: Quantity for confirmation.
+        type: number
+      unitOfMeasure:
+        description: Unit of measure of the quantity.
+        type: string
+  ActivityConfirmationPublicAPIRequest:
+    type: object
+    title: PostActivityConfirmationRequest
+    description: Request object to confirm activities.
+    required:
+      - plant
+      - shopOrder
+      - operationActivity
+      - stepId
+      - workCenter
+      - activities
+    properties:
+      plant:
+        description: Plant where activity confirmation has to be performed.
+        type: string
+      shopOrder:
+        description: Shop order for which activity confirmation has to be performed.
+        type: string
+      sfc:
+        description: >-
+          Sfc of the order for which activity confirmation has to be performed.
+          If the shop order has only one Sfc, this attribute is optional. Else,
+          provide the Sfc.
+        type: string
+      operationActivity:
+        description: Operation Activity at which activity confirmation has to be performed.
+        type: string
+      stepId:
+        description: Step Identifier at which activity confirmation has to be performed.
+        type: string
+      workCenter:
+        description: Work center at which activity confirmation has to be performed.
+        type: string
+      finalConfirmation:
+        description: >-
+          Final confirmation flag for reporting final activity confirmation and
+          completing a operation activity.
+        type: boolean
+      allowPostingsAfterOperationActivityComplete:
+        description: >-
+          Allows activity confirmation even when the operation activity is
+          completed in SAP Digital Manufacturing Cloud. By default, the value is
+          false. If the value is explicitly set to true, then the activities
+          will be posted even though the operation activity is completed.
+        type: boolean
+      activities:
+        type: array
+        description: Activity list for which activity confirmation has to be performed.
+        items:
+          $ref: '#/definitions/ActivityRequestPublicApi'
+  ActivityConfirmationSummaryPublicAPIRequest:
+    type: object
+    title: PostActivityConfirmationSummaryRequest
+    description: Request object to retrieve activities.
+    required:
+      - plant
+      - shopOrder
+      - sfc
+      - operationActivity
+      - stepId
+      - workCenter
+    properties:
+      plant:
+        description: Plant where activity confirmation has to be performed.
+        type: string
+      shopOrder:
+        description: Shop order for which activity confirmation has to be performed.
+        type: string
+      sfc:
+        description: >-
+          Sfc of the order for which activity confirmation has to be performed.
+          If the shop order has only one Sfc, this attribute is optional. Else,
+          provide the Sfc.
+        type: string
+      operationActivity:
+        description: Operation Activity at which activity confirmation has to be performed.
+        type: string
+      stepId:
+        description: Step Identifier at which activity confirmation has to be performed.
+        type: string
+      workCenter:
+        description: Work center at which activity confirmation has to be performed.
+        type: string
+  ActivityRequestPublicApi:
+    type: object
+    title: ActivityRequest
+    description: Request object for activity.
+    required:
+      - activityId
+      - quantity
+      - postedBy
+      - postingDateTime
+    properties:
+      activityId:
+        description: Activity ID.
+        type: string
+      quantity:
+        description: Quantity for confirmation.
+        type: number
+      unitOfMeasure:
+        description: Unit of measure of the quantity.
+        type: string
+      isoUnitOfMeasure:
+        description: ISO code for the Unit of measure of the quantity.
+        type: string
+      postedBy:
+        description: ID of the user who posted the activity confirmation.
+        type: string
+      postingDateTime:
+        type: string
+        format: date-time
+        example: '2022-04-08T07:00:05.000Z'
+        description: >-
+          The posting date time (in UTC) when the activity confirmation is
+          performed.
+  ActivityConfirmationPublicAPIResponse:
+    type: object
+    title: PostActivityConfirmationResponse
+    description: The activity confirmation response.
+    properties:
+      shopOrder:
+        description: Shop order for which activity confirmation has been performed.
+        type: string
+      operationActivity:
+        description: Operation Activity at which activity confirmation has been performed.
+        type: string
+      workCenter:
+        description: Work center at which activity confirmation has been performed.
+        type: string
+      activities:
+        type: array
+        description: Activity list for which activity confirmation has been performed.
+        items:
+          $ref: '#/definitions/ActivityResponsePublicApi'
+  ActivityResponsePublicApi:
+    type: object
+    title: ActivityResponse
+    description: Response object for activity.
+    properties:
+      activityId:
+        description: Activity ID.
+        type: string
+      quantity:
+        description: Quantity confirmed.
+        type: number
+      unitOfMeasure:
+        description: Unit of measure of the confirmed quantity.
+        type: string
+      isoUnitOfMeasure:
+        description: ISO code of the unit of measure of the quantity.
+        type: string
+      postedBy:
+        description: ID of the user who posted the activity confirmation.
+        type: string
+      postingDateTime:
+        type: string
+        format: date-time
+        example: '2022-04-08T07:00:05.000Z'
+        description: >-
+          The posting date time (in UTC) when the activity confirmation is
+          performed.
+  ErrorResponse:
+    type: object
+    properties:
+      causeMessage:
+        type: string
+        description: Contains technical reason for the error.
+      code:
+        type: string
+        description: Internal error message.
+      correlationId:
+        type: string
+        description: Contains correlationId for the error.
+      message:
+        type: string
+        description: Contains additional information, if any.
+    title: ErrorResponse
+    description: Error response.
