@@ -1,0 +1,157 @@
+openapi: 3.0.0
+info:
+  description: |
+    This is an API to expose specific SAP EWM resources.
+  version: 1.0.0-oas3
+  title: SAP EWM via Azure Integration Services
+tags:
+  - name: handlingUnit
+    description: Handling unit operations
+paths:
+  '/handlingUnit/{huId}/{scanner}':
+    get:
+      tags:
+        - handlingUnit
+      summary: Get handling unit details
+      description: Returns a single handling unit object
+      operationId: getHandlingUnitByHuId
+      parameters:
+        - name: huId
+          in: path
+          description: Handling unit ID or SSCC
+          required: true
+          schema:
+            type: string
+            maxLength: 20
+        - name: scanner
+          in: path
+          description: Scanner where handling unit is located
+          required: true
+          schema:
+            type: string
+            maxLength: 200
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handlingUnit'
+        '400':
+          description: Invalid handling unit ID supplied
+        '404':
+          description: Handling unit not found
+  '/handlingUnit/{huId}/receive':
+    post:
+      tags:
+        - handlingUnit
+      summary: Receive a known handling unit
+      operationId: receiveHandlingUnit
+      parameters:
+        - name: huId
+          in: path
+          description: Handling unit ID or SSCC
+          required: true
+          schema:
+            type: string
+            maxLength: 20
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/handlingUnitReceiveRequestBody'
+      responses:
+        '201':
+          description: Handling unit received
+        '400':
+          description: Invalid handling Unit ID supplied
+        '404':
+          description: Handling unit not found
+  '/handlingUnit/{huId}/consume':
+    post:
+      tags:
+        - handlingUnit
+      summary: Consume a receipted handling unit
+      operationId: consumeHandlingUnit
+      parameters:
+        - name: huId
+          in: path
+          description: Handling unit ID or SSCC
+          required: true
+          schema:
+            type: string
+            maxLength: 20
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/handlingUnitConsumeRequestBody'
+      responses:
+        '201':
+          description: Handling unit consumed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handlingUnit'
+        '400':
+          description: Invalid handling unit ID supplied
+        '409':
+          description: Handling unit material number incorrect
+        '410':
+          description: Handling unit already consumed
+servers:
+  - url: 'https://virtserver.swaggerhub.com/Kim.Fiddaman/SAPEWMviaAIS/1.0.0'
+  - url: 'http://virtserver.swaggerhub.com/Kim.Fiddaman/SAPEWMviaAIS/1.0.0'
+components:
+  schemas:
+    handlingUnit:
+      type: object
+      properties:
+        huId:
+          type: string
+          maxLength: 20
+        materialNum:
+          type: string
+          maxLength: 14
+        quantity:
+          type: integer
+          format: int64
+        manufDate:
+          type: string
+          maxLength: 10
+        batch:
+          type: string
+          maxLength: 12
+      required:
+        - huId
+        - materialNum
+        - quantity
+    handlingUnitReceiveRequestBody:
+      allOf:
+        - $ref: '#/components/schemas/handlingUnit'
+      type: object
+      properties:
+        scanner:
+          type: string
+          maxLength: 25
+      required:
+        - scanner
+    handlingUnitConsumeRequestBody:
+      allOf:
+        - $ref: '#/components/schemas/handlingUnitReceiveRequestBody'
+      type: object
+      properties:
+        processOrders:
+          type: array
+          items:
+            type: string
+            maxLength: 10
+          minItems: 1
+          maxItems: 3
+        sourceAutomation:
+          type: string
+          enum: ["RORO"]
+      required:
+        - processOrders
