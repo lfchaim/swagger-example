@@ -1,0 +1,1393 @@
+openapi: 3.0.2
+x-stoplight:
+  id: 3do33lqeb9erh
+info:
+  title: API Get Production Material Request Details - Release Stock from PMR
+  version: 1.0.0
+  description: |-
+    API Get Production Material Request Details - Release Stock from PMR
+    Functions:
+    - Display Production Material Request header and items
+    - Release stock from PMR item
+  contact:
+    name: 'Richemont Group Technology : Logistics Execution LE'
+    url: 'https://richemont.service-now.com/business/main.do'
+x-rlg-facets:
+  access: private
+  authentication: user
+  service_level: high
+  service_schedule: always_on
+  data_sources: 'ECC, EWM'
+  target_audience: internal
+  ownership: group
+  provider: sap
+  information_type:
+    - logistic
+    - supply_chain
+    - manufacture
+    - planning
+    - process
+    - production material request
+  information_class: confidential
+  lifecycle: pilot
+  cloud_regions:
+    - saas
+x-rlg-keywords:
+  - private
+  - ECC
+  - logistics
+  - supply_chain
+  - manufacture
+  - reservation document
+  - planning
+  - PMR
+  - production material request
+  - EWM
+servers:
+  - description: Quality (Project)
+    url: 'https://rlg-ric-test-qua.apigee.net/sap-....-vx'
+  - description: Pre-production
+    url: 'https://rlg-ric-test-val.apigee.net/sap-...-vx'
+tags:
+  - name: BapiretSet
+  - name: ReadPMR
+  - name: Metadata
+paths:
+  /BapiretSet:
+    get:
+      summary: Get entities from BapiretSet
+      description: Get log messages
+      operationId: getBapiretSet
+      tags:
+        - BapiretSet
+      parameters:
+        - $ref: '#/components/parameters/format'
+        - name: $filter
+          in: query
+          description: 'Filter items by property values, see [Filtering](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=64)'
+          schema:
+            type: string
+        - $ref: '#/components/parameters/count'
+        - name: $select
+          in: query
+          description: 'Select properties to be returned, see [Select](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=68)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - Type
+                - Id
+                - Number
+                - Message
+                - LogNo
+                - LogMsgNo
+                - MessageV1
+                - MessageV2
+                - MessageV3
+                - MessageV4
+                - Parameter
+                - Row
+                - Field
+                - System
+      responses:
+        '200':
+          description: Retrieved entities
+          content:
+            application/json:
+              schema:
+                title: Wrapper
+                type: object
+                properties:
+                  d:
+                    title: Collection of Bapiret
+                    type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Bapiret'
+        4XX:
+          $ref: '#/components/responses/error'
+        5XX:
+          $ref: '#/components/responses/error'
+  '/BapiretSet(Id=''{Id}'',Number=''{Number}'')':
+    parameters:
+      - name: Id
+        in: path
+        required: true
+        description: ABAP system field. Message class after the statement MESSAGE.
+        schema:
+          type: string
+          maxLength: 20
+      - name: Number
+        in: path
+        required: true
+        description: |-
+          Message Number  
+          Message number.
+        schema:
+          type: string
+          maxLength: 3
+    get:
+      summary: Get entity from BapiretSet by key
+      description: Get log messages by key
+      operationId: getBapiretSetByKey
+      tags:
+        - BapiretSet
+      parameters:
+        - $ref: '#/components/parameters/format'
+        - name: $select
+          in: query
+          description: 'Select properties to be returned, see [Select](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=68)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - Type
+                - Id
+                - Number
+                - Message
+                - LogNo
+                - LogMsgNo
+                - MessageV1
+                - MessageV2
+                - MessageV3
+                - MessageV4
+                - Parameter
+                - Row
+                - Field
+                - System
+      responses:
+        '200':
+          description: Retrieved entity
+          content:
+            application/json:
+              schema:
+                title: Bapiret
+                type: object
+                properties:
+                  d:
+                    $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Bapiret'
+        4XX:
+          $ref: '#/components/responses/error'
+        5XX:
+          $ref: '#/components/responses/error'
+  /ReadPMRHeader:
+    get:
+      summary: Get entities from ReadPMRHeader
+      description: Read Production Material Request Header
+      operationId: getReadPMRHeader
+      tags:
+        - ReadPMR
+      parameters:
+        - $ref: '#/components/parameters/format'
+        - name: $filter
+          in: query
+          description: 'Filter items by property values, see [Filtering](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=64)'
+          schema:
+            type: string
+        - $ref: '#/components/parameters/count'
+        - name: $select
+          in: query
+          description: 'Select properties to be returned, see [Select](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=68)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - Logsys
+                - Plant
+                - WhsNo
+                - OrderNumber
+                - SupplyArea
+                - HuExid
+                - HuExidType
+                - Matnr
+                - WithConsumed
+                - StorageType
+                - ReservationNumber
+                - ReservationItem
+                - OperationNo
+                - TargetStock
+                - Serial
+                - ToMessages
+                - ToSerialNumbers
+                - ToStockInfo
+        - name: $expand
+          in: query
+          description: 'Expand related entities, see [Expand](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=63)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - ToMessages
+                - ToSerialNumbers
+                - ToStockInfo
+      responses:
+        '200':
+          description: Retrieved entities
+          content:
+            application/json:
+              schema:
+                title: Wrapper
+                type: object
+                properties:
+                  d:
+                    title: Collection of ReadStock
+                    type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Input'
+        4XX:
+          $ref: '#/components/responses/error'
+        5XX:
+          $ref: '#/components/responses/error'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Input'
+            examples:
+              example-1:
+                value: {}
+    parameters: []
+  '/ReadPMRHeader(Logsys=''{Logsys}'',WhsNo=''{WhsNo}'',ManufacturingOrder=''{OrderNumber}'')':
+    parameters:
+      - name: Logsys
+        in: path
+        required: true
+        description: |-
+          System in which applications run integrated on a shared data basis.  
+          The distribution of data between systems requires that each system in the network has a unique identification. The logical system is used for this purpose.  
+          In the SAP System the client corresponds to a logical system. You can assign a logical system to a client in the client maintenance (choose Goto -> Detail).  
+          The logical system is relevant in the following SAP areas:  
+          ALE  general: two or more logical systems communicate with one another.  
+          ALE - ALE business processes (for example, cost center accounting): definition of a system where a specific application runs. Changes to master data can only be made in this system, for example.  
+          Workflow objects: the logical system in which the object is located is always included in an object's key.  
+          When maintaining the logical system, note the following:  
+          The logical system must be unique company-wide. It must not be used by any other system in the ALE integrated group. In a production system, the logical system must not be changed. If the logical system of a document reference is not set to initial and does not match your own, the system assumes the document is located in a different system.
+        schema:
+          type: string
+          maxLength: 10
+      - name: WhsNo
+        in: path
+        required: true
+        description: |-
+          Warehouse Number/Warehouse Complex  
+          Number that identifies a complex, physical warehouse structure within the Warehouse Management system.  
+          All activities within a warehouse, for example, goods movements and physical inventory, are assigned to a specific warehouse number. The physical warehouse where these activities take place is identified by the warehouse number.
+        schema:
+          type: string
+          maxLength: 3
+      - name: OrderNumber
+        in: path
+        required: true
+        description: |-
+          Order Number  
+          Number which identifies an order within a client.
+        schema:
+          type: string
+          maxLength: 12
+    get:
+      summary: Get entity from ReadPMRHeader by key
+      description: Read Production Material Request Header by key
+      operationId: getReadPMRHeaderByKey
+      tags:
+        - ReadPMR
+      parameters:
+        - $ref: '#/components/parameters/format'
+        - name: $select
+          in: query
+          description: 'Select properties to be returned, see [Select](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=68)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - Logsys
+                - Plant
+                - WhsNo
+                - OrderNumber
+                - SupplyArea
+                - HuExid
+                - HuExidType
+                - Matnr
+                - WithConsumed
+                - StorageType
+                - ReservationNumber
+                - ReservationItem
+                - OperationNo
+                - TargetStock
+                - Serial
+                - ToMessages
+                - ToSerialNumbers
+                - ToStockInfo
+        - name: $expand
+          in: query
+          description: 'Expand related entities, see [Expand](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=63)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - ToMessages
+                - ToSerialNumbers
+                - ToStockInfo
+      responses:
+        '200':
+          description: Retrieved entity
+          content:
+            application/json:
+              schema:
+                title: ReadStock
+                type: object
+                properties:
+                  d:
+                    $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Output'
+        4XX:
+          $ref: '#/components/responses/error'
+        5XX:
+          $ref: '#/components/responses/error'
+  /ReadPMRItem:
+    get:
+      summary: Get entities from ReadPMRItem
+      description: Read Production Material Request Item
+      operationId: getReadPMRItem
+      tags:
+        - ReadPMR
+      parameters:
+        - $ref: '#/components/parameters/format'
+        - name: $filter
+          in: query
+          description: 'Filter items by property values, see [Filtering](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=64)'
+          schema:
+            type: string
+        - $ref: '#/components/parameters/count'
+        - name: $select
+          in: query
+          description: 'Select properties to be returned, see [Select](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=68)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - Logsys
+                - Plant
+                - WhsNo
+                - OrderNumber
+                - SupplyArea
+                - HuExid
+                - HuExidType
+                - Matnr
+                - WithConsumed
+                - StorageType
+                - ReservationNumber
+                - ReservationItem
+                - OperationNo
+                - TargetStock
+                - Serial
+                - ToMessages
+                - ToSerialNumbers
+                - ToStockInfo
+        - name: $expand
+          in: query
+          description: 'Expand related entities, see [Expand](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=63)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - ToMessages
+                - ToSerialNumbers
+                - ToStockInfo
+      responses:
+        '200':
+          description: Retrieved entities
+          content:
+            application/json:
+              schema:
+                title: Wrapper
+                type: object
+                properties:
+                  d:
+                    title: Collection of ReadStock
+                    type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Input'
+        4XX:
+          $ref: '#/components/responses/error'
+        5XX:
+          $ref: '#/components/responses/error'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Input'
+            examples:
+              example-1:
+                value: {}
+    parameters: []
+  '/ReadPMRItem(Logsys=''{Logsys}'',WhsNo=''{WhsNo}'', ManufacturingOrder=''{OrderNumber}'', ReservationNumber=''{ReservationNumber}'', ReservationItem=''{ReservationItem}'',HandlingUnitNumber=''{HandlingUnitNumber}'')':
+    parameters:
+      - name: Logsys
+        in: path
+        required: true
+        description: |-
+          System in which applications run integrated on a shared data basis.  
+          The distribution of data between systems requires that each system in the network has a unique identification. The logical system is used for this purpose.  
+          In the SAP System the client corresponds to a logical system. You can assign a logical system to a client in the client maintenance (choose Goto -> Detail).  
+          The logical system is relevant in the following SAP areas:  
+          ALE  general: two or more logical systems communicate with one another.  
+          ALE - ALE business processes (for example, cost center accounting): definition of a system where a specific application runs. Changes to master data can only be made in this system, for example.  
+          Workflow objects: the logical system in which the object is located is always included in an object's key.  
+          When maintaining the logical system, note the following:  
+          The logical system must be unique company-wide. It must not be used by any other system in the ALE integrated group. In a production system, the logical system must not be changed. If the logical system of a document reference is not set to initial and does not match your own, the system assumes the document is located in a different system.
+        schema:
+          type: string
+          maxLength: 10
+      - name: WhsNo
+        in: path
+        required: true
+        description: |-
+          Warehouse Number/Warehouse Complex  
+          Number that identifies a complex, physical warehouse structure within the Warehouse Management system.  
+          All activities within a warehouse, for example, goods movements and physical inventory, are assigned to a specific warehouse number. The physical warehouse where these activities take place is identified by the warehouse number.
+        schema:
+          type: string
+          maxLength: 3
+      - schema:
+          type: string
+        name: ReservationNumber
+        in: path
+        required: true
+        description: Reservation Number Number for Reservation from ERP system
+      - schema:
+          type: string
+        name: ReservationItem
+        in: path
+        required: true
+        description: Reservation Item Item Number of Reservation
+      - schema:
+          type: string
+        name: OrderNumber
+        in: path
+        required: true
+        description: Order Number Number which identifies an order within a client.
+      - schema:
+          type: string
+        name: HandlingUnitNumber
+        in: path
+        description: Handling Unit Number Handling Unit Identification
+        required: true
+    get:
+      summary: Get entity from ReadPMRItem by key
+      description: Read Production Material Request Item by key
+      operationId: getReadPMRItemByKey
+      tags:
+        - ReadPMR
+      parameters:
+        - $ref: '#/components/parameters/format'
+        - name: $select
+          in: query
+          description: 'Select properties to be returned, see [Select](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=68)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - Logsys
+                - Plant
+                - WhsNo
+                - OrderNumber
+                - SupplyArea
+                - HuExid
+                - HuExidType
+                - Matnr
+                - WithConsumed
+                - StorageType
+                - ReservationNumber
+                - ReservationItem
+                - OperationNo
+                - TargetStock
+                - Serial
+                - ToMessages
+                - ToSerialNumbers
+                - ToStockInfo
+        - name: $expand
+          in: query
+          description: 'Expand related entities, see [Expand](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=63)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - ToMessages
+                - ToSerialNumbers
+                - ToStockInfo
+      responses:
+        '200':
+          description: Retrieved entity
+          content:
+            application/json:
+              schema:
+                title: ReadStock
+                type: object
+                properties:
+                  d:
+                    $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Output'
+        4XX:
+          $ref: '#/components/responses/error'
+        5XX:
+          $ref: '#/components/responses/error'
+    post:
+      summary: Post from ReadPMRItem by key
+      operationId: postReadPMRItemByKey
+      responses:
+        '202':
+          description: Release Successful
+        4XX:
+          $ref: '#/components/responses/error'
+        5XX:
+          $ref: '#/components/responses/error'
+      description: Release stock from Production Material Request Item
+  '/ReadPMRHeader(Logsys=''{Logsys}'',WhsNo=''{WhsNo}'',ManufacturingOrder=''{OrderNumber}'')/ReadPMRItem':
+    parameters:
+      - name: Logsys
+        in: path
+        required: true
+        description: |-
+          System in which applications run integrated on a shared data basis.  
+          The distribution of data between systems requires that each system in the network has a unique identification. The logical system is used for this purpose.  
+          In the SAP System the client corresponds to a logical system. You can assign a logical system to a client in the client maintenance (choose Goto -> Detail).  
+          The logical system is relevant in the following SAP areas:  
+          ALE  general: two or more logical systems communicate with one another.  
+          ALE - ALE business processes (for example, cost center accounting): definition of a system where a specific application runs. Changes to master data can only be made in this system, for example.  
+          Workflow objects: the logical system in which the object is located is always included in an object's key.  
+          When maintaining the logical system, note the following:  
+          The logical system must be unique company-wide. It must not be used by any other system in the ALE integrated group. In a production system, the logical system must not be changed. If the logical system of a document reference is not set to initial and does not match your own, the system assumes the document is located in a different system.
+        schema:
+          type: string
+          maxLength: 10
+      - name: WhsNo
+        in: path
+        required: true
+        description: |-
+          Warehouse Number/Warehouse Complex  
+          Number that identifies a complex, physical warehouse structure within the Warehouse Management system.  
+          All activities within a warehouse, for example, goods movements and physical inventory, are assigned to a specific warehouse number. The physical warehouse where these activities take place is identified by the warehouse number.
+        schema:
+          type: string
+          maxLength: 3
+      - name: OrderNumber
+        in: path
+        required: true
+        description: |-
+          Order Number  
+          Number which identifies an order within a client.
+        schema:
+          type: string
+          maxLength: 12
+    get:
+      summary: Get entities from PMR Header related to PMR Items
+      description: Read Production Material Request Items from Production Material Request Header
+      operationId: getReadPMRHeaderNavToPMRItems
+      tags:
+        - ReadPMR
+      parameters:
+        - $ref: '#/components/parameters/format'
+        - name: $select
+          in: query
+          description: 'Select properties to be returned, see [Select](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=68)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - Logsys
+                - Plant
+                - WhsNo
+                - OrderNumber
+                - SupplyArea
+                - HuExid
+                - HuExidType
+                - Matnr
+                - WithConsumed
+                - StorageType
+                - ReservationNumber
+                - ReservationItem
+                - OperationNo
+                - TargetStock
+                - Serial
+                - ToMessages
+                - ToSerialNumbers
+                - ToStockInfo
+        - name: $expand
+          in: query
+          description: 'Expand related entities, see [Expand](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=63)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - ToMessages
+                - ToSerialNumbers
+                - ToStockInfo
+      responses:
+        '200':
+          description: Retrieved entities
+          content:
+            application/json:
+              schema:
+                title: ReadStock
+                type: object
+                properties:
+                  d:
+                    $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Output'
+        4XX:
+          $ref: '#/components/responses/error'
+        5XX:
+          $ref: '#/components/responses/error'
+  '/ReadPMRHeader(Logsys=''{Logsys}'',WhsNo=''{WhsNo}'',ManufacturingOrder=''{OrderNumber}'')/ToMessages':
+    parameters:
+      - name: Logsys
+        in: path
+        required: true
+        description: |-
+          System in which applications run integrated on a shared data basis.  
+          The distribution of data between systems requires that each system in the network has a unique identification. The logical system is used for this purpose.  
+          In the SAP System the client corresponds to a logical system. You can assign a logical system to a client in the client maintenance (choose Goto -> Detail).  
+          The logical system is relevant in the following SAP areas:  
+          ALE  general: two or more logical systems communicate with one another.  
+          ALE - ALE business processes (for example, cost center accounting): definition of a system where a specific application runs. Changes to master data can only be made in this system, for example.  
+          Workflow objects: the logical system in which the object is located is always included in an object's key.  
+          When maintaining the logical system, note the following:  
+          The logical system must be unique company-wide. It must not be used by any other system in the ALE integrated group. In a production system, the logical system must not be changed. If the logical system of a document reference is not set to initial and does not match your own, the system assumes the document is located in a different system.
+        schema:
+          type: string
+          maxLength: 10
+      - name: WhsNo
+        in: path
+        required: true
+        description: |-
+          Warehouse Number/Warehouse Complex  
+          Number that identifies a complex, physical warehouse structure within the Warehouse Management system.  
+          All activities within a warehouse, for example, goods movements and physical inventory, are assigned to a specific warehouse number. The physical warehouse where these activities take place is identified by the warehouse number.
+        schema:
+          type: string
+          maxLength: 3
+      - name: OrderNumber
+        in: path
+        required: true
+        description: |-
+          Order Number  
+          Number which identifies an order within a client.
+        schema:
+          type: string
+          maxLength: 12
+    get:
+      summary: Get entities from PMR Header related ToMessages
+      description: Read messages from Production Material Request Header
+      operationId: getReadPMRHeaderNavToMessages
+      tags:
+        - ReadPMR
+        - BapiretSet
+      parameters:
+        - $ref: '#/components/parameters/format'
+        - name: $filter
+          in: query
+          description: 'Filter items by property values, see [Filtering](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=64)'
+          schema:
+            type: string
+        - $ref: '#/components/parameters/count'
+        - name: $select
+          in: query
+          description: 'Select properties to be returned, see [Select](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=68)'
+          explode: false
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+              enum:
+                - Type
+                - Id
+                - Number
+                - Message
+                - LogNo
+                - LogMsgNo
+                - MessageV1
+                - MessageV2
+                - MessageV3
+                - MessageV4
+                - Parameter
+                - Row
+                - Field
+                - System
+      responses:
+        '200':
+          description: Retrieved entities
+          content:
+            application/json:
+              schema:
+                title: Wrapper
+                type: object
+                properties:
+                  d:
+                    title: Collection of Bapiret
+                    type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Bapiret'
+        4XX:
+          $ref: '#/components/responses/error'
+        5XX:
+          $ref: '#/components/responses/error'
+  /$batch:
+    post:
+      summary: Send a group of requests
+      description: |-
+        Group multiple requests into a single request payload, see [Batch Requests](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=152).
+
+        *Please note that "Try it out" is not supported for this request.*
+      tags:
+        - Batch Requests
+      requestBody:
+        required: true
+        description: Batch request
+        content:
+          multipart/mixed;boundary=request-separator:
+            schema:
+              type: string
+            example: |-
+              --request-separator
+              Content-Type: application/http
+              Content-Transfer-Encoding: binary
+
+              GET BapiretSet HTTP/1.1
+              Accept: application/json
+
+
+              --request-separator--
+      responses:
+        '202':
+          description: Batch response
+          content:
+            multipart/mixed:
+              schema:
+                type: string
+              example: |-
+                --response-separator
+                Content-Type: application/http
+
+                HTTP/1.1 200 OK
+                Content-Type: application/json
+
+                {...}
+                --response-separator--
+        4XX:
+          $ref: '#/components/responses/error'
+        5XX:
+          $ref: '#/components/responses/error'
+      operationId: batch
+  /$metadata:
+    get:
+      summary: Read the metadata information
+      description: Read the metadata information of the API
+      tags:
+        - Metadata
+      responses:
+        '200':
+          description: Retrieved metadata
+        4XX:
+          description: all 4XX errors
+      operationId: Metadata
+    head:
+      description: Check resource availability
+      responses:
+        '200':
+          description: Resource available
+        4XX:
+          description: all 4XX errors
+      operationId: Head
+components:
+  schemas:
+    ZGW_LE_EWM_READ_PMR_SRV.Bapiret:
+      type: object
+      properties:
+        Type:
+          type: string
+          nullable: true
+          maxLength: 1
+          title: Message type
+          description: |-
+            Message type: S Success, E Error, W Warning, I Info, A Abort  
+            This parameter has the following values:  
+            "S" for success messages  
+            "E" for error messages  
+            "W" for warnings  
+            "I" for information messages  
+            Depending on the how a BAPI is implemented, if there is a termination message, a rollback can be executed in the database. All database changes since the last commit work command are cancelled. For further information see the documentation for the BAPI in question.
+        Id:
+          type: string
+          maxLength: 20
+          title: Message Class
+          description: ABAP system field. Message class after the statement MESSAGE.
+        Number:
+          type: string
+          maxLength: 3
+          title: Message number
+          description: |-
+            Message Number  
+            Message number.
+        Message:
+          type: string
+          nullable: true
+          maxLength: 220
+          title: Message text
+          description: |-
+            Message Text  
+            Text of the message.
+        LogNo:
+          type: string
+          nullable: true
+          maxLength: 20
+          title: Log Number
+          description: |-
+            Application Log: Log Number  
+            Uniquely identifies a log.
+        LogMsgNo:
+          type: string
+          nullable: true
+          maxLength: 6
+          title: Message no.
+          description: |-
+            Application log: Internal message serial number  
+            Internal message serial number in a log.  
+            (Not necessarily the chronological order.)
+        MessageV1:
+          type: string
+          nullable: true
+          maxLength: 50
+          title: Message Variable
+          description: Text for message placeholders.
+        MessageV2:
+          type: string
+          nullable: true
+          maxLength: 50
+          title: Message Variable
+          description: Text for message placeholders.
+        MessageV3:
+          type: string
+          nullable: true
+          maxLength: 50
+          title: Message Variable
+          description: Text for message placeholders.
+        MessageV4:
+          type: string
+          nullable: true
+          maxLength: 50
+          title: Message Variable
+          description: Text for message placeholders.
+        Parameter:
+          type: string
+          nullable: true
+          maxLength: 32
+          title: Parameter Name
+          description: Name of the parameter in which the error has occurred.
+        Row:
+          type: integer
+          nullable: true
+          format: int32
+          title: Parameter line
+          description: |-
+            Lines in parameter  
+            Contains the number of lines in the parameter in which the error message has occurred.
+        Field:
+          type: string
+          nullable: true
+          maxLength: 30
+          title: Field name
+          description: |-
+            Field in parameter  
+            Description of the field where the error message has occurred.
+        System:
+          type: string
+          nullable: true
+          maxLength: 10
+          title: Logical system
+          description: |-
+            Logical system from which message originates  
+            Contains the name of the logical system in which the message was created.  
+            The system names must have been defined.  
+            In SAP terms a client corresponds to a logical system. When you define a client, you can specify which logical system corresponds to the client.  
+            The logical system is important in the following SAP areas:  
+            ALE generally, where communication takes place between two or more logical systems.  
+            ALE distribution scenarios (for example, cost center accounting) where a system running a particular application is defined. Only in this system, for example, can master data be changed,  
+            Workflow objects: The object key always contains the logical system where the object is located.  
+            When you define the logical system keep in mind that:  
+            The logical system must be unique company-wide. No other system in the ALE system group can be used.  
+            The logical system must not be changed in the productive system, once a non-initial value has been specified. If a logical system with a non- initial value is changed afterwards, you may not be able to find documents in your own system. If the logical system specified in a document reference is not the same as your own system, the system assumes the document is located in a different system.
+      title: Bapiret
+      description: Model for logging & messages
+    ZGW_LE_EWM_READ_PMR_SRV.Input:
+      type: object
+      title: ReadPMR-input
+      description: Model for input fields
+      properties:
+        Logsys:
+          type: string
+          maxLength: 10
+          title: Logical System
+          description: |-
+            System in which applications run integrated on a shared data basis.  
+            The distribution of data between systems requires that each system in the network has a unique identification. The logical system is used for this purpose.  
+            In the SAP System the client corresponds to a logical system. You can assign a logical system to a client in the client maintenance (choose Goto -> Detail).  
+            The logical system is relevant in the following SAP areas:  
+            ALE  general: two or more logical systems communicate with one another.  
+            ALE - ALE business processes (for example, cost center accounting): definition of a system where a specific application runs. Changes to master data can only be made in this system, for example.  
+            Workflow objects: the logical system in which the object is located is always included in an object's key.  
+            When maintaining the logical system, note the following:  
+            The logical system must be unique company-wide. It must not be used by any other system in the ALE integrated group. In a production system, the logical system must not be changed. If the logical system of a document reference is not set to initial and does not match your own, the system assumes the document is located in a different system.
+        Plant:
+          type: string
+          maxLength: 4
+          title: Plant
+          description: Key uniquely identifying a plant.
+        WhsNo:
+          type: string
+          maxLength: 3
+          title: Warehouse No.
+          description: |-
+            Warehouse Number/Warehouse Complex  
+            Number that identifies a complex, physical warehouse structure within the Warehouse Management system.  
+            All activities within a warehouse, for example, goods movements and physical inventory, are assigned to a specific warehouse number. The physical warehouse where these activities take place is identified by the warehouse number.
+        OrderNumber:
+          type: string
+          maxLength: 12
+          title: Order
+          description: |-
+            Order Number  
+            Number which identifies an order within a client.
+        SupplyArea:
+          type: string
+          maxLength: 10
+          title: PSA in ERP
+          description: Production Supply Area (ERP)
+          nullable: true
+        Matnr:
+          type: string
+          maxLength: 40
+          title: Material
+          description: |-
+            Material Number (40 Characters, needed f. technical reasons)  
+            Technical field to be used in communication structures for compatibility reasons.
+          nullable: true
+        WithConsumed:
+          type: string
+          maxLength: 1
+          title: Single-Character Flag
+          nullable: true
+        StorageType:
+          type: string
+          maxLength: 4
+          title: Storage Type
+          description: |-
+            Breakdown of a complex physical warehouse. Storage types differ in their storage techniques, their organizational form, or their function.  
+            A warehouse can be made up of the following storage types, for example:  
+            Goods receipt area  
+            Picking area  
+            High rack storage area  
+            Bulk storage  
+            General storage area  
+            Goods issue area
+          nullable: true
+        ReservationNumber:
+          type: string
+          maxLength: 10
+          title: Reservation Number
+          description: Number for Reservation or Other Dependent Requirement
+          nullable: true
+        ReservationItem:
+          type: string
+          maxLength: 4
+          title: Reservation Item
+          description: |-
+            Item Number of Reservation / Dependent Requirements  
+            Specifies the number that uniquely identifies an item in .
+          nullable: true
+        OperationNo:
+          type: string
+          maxLength: 4
+          title: Operation Number
+          description: 'Not More Closely Defined Area, Possibly Used for Patchlevels'
+          nullable: true
+        HandlingUnitNumber:
+          type: string
+          maxLength: 20
+          title: Operation Number
+          description: |-
+            External Handling Unit Identification  
+            Specifies an external identifier for the handling unit.  
+            The system automatically generates an internal number that must be unique for each system client. The system also needs external identification so that it can uniquely identify handling units.  
+            Creating a handling unit:  
+            Identifiers for handling units are determined during creation according to settings in Customizing for number assignment of the packaging material type for the packaging material that is being used. You can also assign default values for identifiers when you create handling units, although these values must correspond to the settings in Customizing.  
+            Processing a handling unit  
+            To edit existing handling units, enter the handling unit's identification in this field.
+          nullable: true
+        ToMessages:
+          oneOf:
+            - type: object
+              properties:
+                results:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Bapiret'
+            - type: array
+              items:
+                $ref: '#/components/schemas/ZGW_LE_EWM_READ_PMR_SRV.Bapiret'
+    ZGW_LE_EWM_READ_PMR_SRV.Output:
+      type: object
+      title: ReadPMR-output
+      description: Model for output fields
+      properties:
+        BaseUom:
+          type: string
+          maxLength: 3
+          title: Base Unit
+          description: |-
+            Base Unit of Measure  
+            Unit of measure in which stocks of the material are managed. The system converts all the quantities you enter in other units of measure (alternative units of measure) to the base unit of measure.  
+            You define the base unit of measure and also alternative units of measure and their conversion factors in the material master record.  
+            Since all data is updated in the base unit of measure, your entry is particularly important for the conversion of alternative units of measure. A quantity in the alternative unit of measure can only be shown precisely if its value can be shown with the decimal places available. To ensure this, please note the following:  
+            The base unit of measure is the unit satisfying the highest necessary requirement for precision.  
+            The conversion of alternative units of measure to the base unit should result in simple decimal fractions (not, for example, 1/3 = 0.333...).  
+            Inventory Management  
+            In Inventory Management, the base unit of measure is the same as the stockkeeping unit.  
+            Services  
+            Services have units of measure of their own, including the following:  
+            Service unit  
+            Unit of measure at the higher item level. The precise quantities of the individual services are each at the detailed service line level.  
+            Blanket  
+            Unit of measure at service line level for services to be provided once only, and for which no precise quantities can or are to be specified.
+          nullable: true
+        Batch:
+          type: string
+          maxLength: 10
+          title: Batch
+          description: |-
+            Batch Number  
+            Assigns a material that is manufactured in batches or production lots to a specific batch.
+          nullable: true
+        HandlingUnitNumber:
+          type: string
+          maxLength: 20
+          title: Handling Unit
+          description: |-
+            External Handling Unit Identification  
+            Specifies an external identifier for the handling unit.  
+            The system automatically generates an internal number that must be unique for each system client. The system also needs external identification so that it can uniquely identify handling units.  
+            Creating a handling unit:  
+            Identifiers for handling units are determined during creation according to settings in Customizing for number assignment of the packaging material type for the packaging material that is being used. You can also assign default values for identifiers when you create handling units, although these values must correspond to the settings in Customizing.  
+            Processing a handling unit  
+            To edit existing handling units, enter the handling unit's identification in this field.
+          nullable: true
+        HandlingUnitType:
+          type: string
+          maxLength: 1
+          title: ID Type
+          description: |-
+            Type of External Handling Unit Identifier  
+            Indicates how the external handling unit identifier is determined.  
+            If automatic assignment of a Serial Shipping Container Code (SSCC) is set in Customizing for the packaging material's packaging material type, the value is "C".
+          nullable: true
+        LineId:
+          type: string
+          maxLength: 10
+          title: Line ID
+          description: Incremental number related to document items
+        Material:
+          type: string
+          maxLength: 40
+          title: Material
+          description: |-
+            Material Number (40 Characters, needed f. technical reasons)  
+            Technical field to be used in communication structures for compatibility reasons.
+        HeaderMaterial:
+          type: string
+          maxLength: 40
+          title: Material
+          description: |-
+            Material Number (40 Characters, needed f. technical reasons)  
+            Technical field to be used in communication structures for compatibility reasons.
+        HeaderQuantity:
+          description: Specification of a quantity.
+          type: number
+          nullable: true
+        HeaderBaseUom:
+          type: string
+          maxLength: 3
+          title: Base Unit
+          description: |-
+            Base Unit of Measure  
+            Unit of measure in which stocks of the material are managed. The system converts all the quantities you enter in other units of measure (alternative units of measure) to the base unit of measure.  
+            You define the base unit of measure and also alternative units of measure and their conversion factors in the material master record.  
+            Since all data is updated in the base unit of measure, your entry is particularly important for the conversion of alternative units of measure. A quantity in the alternative unit of measure can only be shown precisely if its value can be shown with the decimal places available. To ensure this, please note the following:  
+            The base unit of measure is the unit satisfying the highest necessary requirement for precision.  
+            The conversion of alternative units of measure to the base unit should result in simple decimal fractions (not, for example, 1/3 = 0.333...).  
+            Inventory Management  
+            In Inventory Management, the base unit of measure is the same as the stockkeeping unit.  
+            Services  
+            Services have units of measure of their own, including the following:  
+            Service unit  
+            Unit of measure at the higher item level. The precise quantities of the individual services are each at the detailed service line level.  
+            Blanket  
+            Unit of measure at service line level for services to be provided once only, and for which no precise quantities can or are to be specified.
+          nullable: true
+        ProductionStatus:
+          type: string
+          maxLength: 40
+          title: Base Unit
+          description: |
+            Manufacturing Order status tracking progress on the production. 
+        GoodsIssueStatus:
+          type: string
+          maxLength: 40
+          title: Base Unit
+          description: |
+            Manufacturing Order status tracking progress on the consumption of components.
+        PlannedStartDate:
+          type: string
+          title: Base Unit
+          description: |
+            Planned date to start production of a manufacturing order.
+          maxLength: 8
+        PlannedEndDate:
+          type: string
+          title: Base Unit
+          description: |
+            Planned date to finish production of a manufacturing order.
+          maxLength: 8
+        CreatedOn:
+          type: string
+          maxLength: 8
+          title: Base Unit
+          description: Date of creation of the manufacturing order
+        CreatedBy:
+          type: string
+          maxLength: 12
+          title: Base Unit
+          description: User from which the order originates
+        OrderNumber:
+          type: string
+          maxLength: 12
+          title: Order
+          description: |-
+            Order Number  
+            Number which identifies an order within a client.
+        Quantity:
+          description: Specification of a quantity.
+          type: number
+          nullable: true
+        AltQuantity:
+          type: number
+          format: decimal
+          example: 1
+          title: Quantity
+          description: Specification of a quantity.
+          nullable: true
+        ReservationType:
+          type: string
+          maxLength: 1
+          title: Record type
+          description: Type of Reservation
+          nullable: true
+        ReservationNumber:
+          type: string
+          maxLength: 10
+          title: Reservation
+          description: Number of reservation/dependent requirements
+          nullable: true
+        ReservationItem:
+          type: string
+          maxLength: 4
+          title: Item no.
+          description: |-
+            Item Number of Reservation / Dependent Requirements  
+            Specifies the number that uniquely identifies an item in .
+          nullable: true
+        Cat:
+          type: string
+          maxLength: 2
+          title: Stock Type
+          description: Stock Type
+        StorageBin:
+          type: string
+          maxLength: 18
+          title: Storage Bin
+          description: The smallest spatial unit in a warehouse used to store goods.
+        AltUom:
+          type: string
+          maxLength: 3
+          title: Unit of Entry
+          description: Unit of entry
+          nullable: true
+        StagingMethod:
+          type: string
+          maxLength: 1
+          title: Staging Method
+          description: |-
+            Defines how the products are supplied to the production supply area.  
+            The following staging methods are available:  
+            Not Relevant for Staging  
+            The system does not consider items of a production material request with this staging indicator for any kind of staging. When you use a production material request with products marked as not relevant for staging to post the goods issue in SAP Extended Warehouse Management (SAP EWM), you have to ensure that there is sufficient stock in your production supply area.  
+            You can use this setting, for example, for products that you use directly from a silo.  
+            Crate Part Replenishment  
+            The system schedules the work to bring products to the production supply area when you use transaction Schedule Replenishment.  
+            You can use this staging method for products that you need to be available in the production supply area at all times.  
+            Cross-Order Staging  
+            The system uses the production material request items to determine which products are required in the production supply area. It cumulates the quantities for all the selected items to optimize the staging. You can schedule the system to perform cross-order staging regularly using the report Schedule Staging for Production.  
+            You can use this staging method for products where several manufacturing orders can share a larger quantity of the product. For example, you can stage 1 PAL containing 1000 KG of a product for several orders that require 50 to 100 KG of the product each.  
+            Cross-order staging in SAP EWM corresponds to release order parts in SAP ERP.  
+            Single-Order Staging  
+            The system uses the production material request items to stage the product according to the quantity of each single item required. During staging, the system assigns the stock to the production material request item. You cannot post goods issue for this stock for another document or item. You can schedule the system to perform single-order staging regularly using the report Schedule Staging for Production.  
+            You can use this staging method when you want to assign the stock to a specific item.  
+            Single-order staging in SAP EWM corresponds to pick parts in SAP ERP.  
+            When you create a production material request the system uses the determination settings. When it is not possible to use the staging method from the determination for the data in the production material request, the system uses a suitable staging method.
+          nullable: true
+        Psa:
+          type: string
+          maxLength: 15
+          title: PSA
+          description: |-
+            Production Supply Area (PSA)  
+            Defines the location that is used to stage products to prepare them for movement to the production supply area (PSA).  
+            If you use this field, this may have WM-processing-relevant effects on the location of the staging of the products.  
+            The following fields are determined:  
+            For inbound deliveries:  
+            Destination Bin of the Putaway Warehouse Task  
+            Storage Bin of Goods Movement Posting (items without relevance for putaway)  
+            For outbound delivery orders:  
+            Staging Bay  
+            Storage Bin of Goods Movement Posting  
+            For posting changes and stock transfer:  
+            Destination Storage Bin
+          nullable: true
+        Operation:
+          type: string
+          maxLength: 4
+          title: Operation
+          description: |-
+            Operation Number or Activity Number  
+            Identifies the operation or activity in the manufacturing order that item is to be used for.  
+            The system can read this from the manufacturing order, or, if there is more than one possible operation or activity, you can choose the correct number.
+          nullable: true
+        IncomingQty:
+          type: number
+          format: decimal
+          example: 1
+          title: Incoming Qty
+          description: |-
+            Target Quantity in Base Unit of Measure  
+            Target quantity in stockkeeping unit that is being removed from the source storage bin.
+          nullable: true
+    error:
+      type: object
+      required:
+        - problemId
+        - messageId
+        - message
+      properties:
+        problemId:
+          type: string
+        messageId:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+      description: Model for errors
+  parameters:
+    format:
+      name: $format
+      in: query
+      description: 'Choose response formats, see [Filtering](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=64)'
+      schema:
+        type: string
+    top:
+      name: $top
+      in: query
+      description: 'Show only the first n items, see [Paging - Top](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=66)'
+      schema:
+        type: integer
+        minimum: 0
+      example: 50
+    skip:
+      name: $skip
+      in: query
+      description: 'Skip the first n items, see [Paging - Skip](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=65)'
+      schema:
+        type: integer
+        minimum: 0
+    count:
+      name: $inlinecount
+      in: query
+      description: 'Include count of items, see [Inlinecount](https://help.sap.com/doc/5890d27be418427993fafa6722cdc03b/Cloud/en-US/OdataV2.pdf#page=67)'
+      schema:
+        type: string
+        enum:
+          - allpages
+          - none
+  responses:
+    error:
+      description: Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: This API uses OAuth 2 with the Authorizaton Code grant flow
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://rlg-ric-test-val.apigee.net/oauth2/auth'
+          tokenUrl: 'https://rlg-ric-test-val.apigee.net/oauth2/token'
+          scopes:
+            read: Grants read access
+security:
+  - OAuth2:
+      - read
