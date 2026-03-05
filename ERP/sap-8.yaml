@@ -1,0 +1,316 @@
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/Philips35/SAP-NIOP/1.0.0
+info:
+  version: "1.0.0"
+  title: SAP MP1 - NIOP Integration
+  description: >-
+   The project is the MVP deliverable for the SAP (MP1/MBP) integration between BioTel and the broader Philips
+    
+    <br>High level Capabilities</br>
+      Integration of BioTel manufacturing into the existing SAP MBP processes.  
+
+      The integration with SAP MP1 for asset management of BioTel devices and consumables.
+
+      Replacement of SAGE by BioTel by SAP for financials.
+
+      Shift the receiving of new devices to SAP and automate the addition of devices to NIOP.
+   
+security:
+  - accessCode:
+      - read
+      - write
+
+paths:
+  /<SAP_GatewayService>/GoodsReceipt:
+    post:
+      tags:
+        - Goods Receipt from SAP
+      summary: API to receive devices from SAP to NIOP
+      description: >-
+        API to receive devices to NIOP.
+         #
+          Implemented by: NIOP
+          #
+          Protocol: HTTPs 
+          #
+          SAP Gateway Basepath: localhost:6000  
+      parameters:
+        - name: correlationId
+          in: header
+          description: Unique ID for tracking the transaction
+          required: true
+          schema:
+            type: string
+        - name: recordName
+          description: GoodsReceipts
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: recordId
+          description: Blank
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: consumer
+          description: MP1
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: provider
+          description: NIOP_US or NIOP_IM
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: consumerTimestamp
+          description: Timestamp when the message sent
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: testMode
+          description: Blank
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: info1
+          description: Blank
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: info2
+          description: Blank
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: info3
+          description: Blank
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/schemas/'
+      responses:
+        '200':
+          description: Already Registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/alreadyRegistered'
+        '202':
+          description: Registration request received.
+        '400':
+          description: >-
+            The request could not be understood by the server due to incorrect
+            syntax. Body can contain additonal information in the ErrorModel format.
+        '404':
+          description: >-
+            URI not found. Body can contain additonal information in the ErrorModel format.
+        '405':
+          description: >-
+            Method Not Allowed. Methods that are implemented but are not
+            supported anymore.
+        '406': 
+          description: >-
+            Unsupported Media Type. Accept header is not application/json. Body can contain additonal information in the ErrorModel format.
+        '415':
+          description: >-
+            Unsupported Media Type. Content-type header is not application/json.
+        '500':
+          description: >-
+            Internal server error. Body can contain additonal information in the ErrorModel format.
+        '503':
+          description: Device is busy.
+    get:
+      summary: Server heartbeat operation
+      description: >-
+        This operation shows how to override the global security defined above,
+        as we want to open it up for all users.
+      security: []
+      responses:
+        '200':
+          description: OK
+components:
+  schemas: 
+     type: object
+     properties:
+        apiHeader:
+          type: object
+          properties:
+            correlationId:
+              type: string
+            recordName:
+              type: string
+            recordId:
+              type: string
+            consumer:
+              type: string
+            consumerTimestamp:
+              type: string
+            testMode:
+              type: string
+            info1:
+              type: string
+            info2:
+              type: string
+            info3:
+              type: string
+          required:
+           - correlationId
+            - recordName
+            - recordId
+            - consumer
+            - consumerTimestamp
+            - testMode
+            - info1
+            - info2
+            - info3
+     goodsReceipts:
+        type: object
+        properties:
+          DeliveryNote:
+            type: string
+          docDate:
+            type: string
+          grDate:
+            type: string
+          billOfLading:
+            type: string
+          headerText:
+            type: string
+          grIRSlip:
+            type: string
+          goodsReceiptItems:
+            type: array
+            items:
+              - type: object
+                properties:
+                  materialId:
+                    type: string
+                  deliveryPlant:
+                    type: string
+                  storageLocation:
+                    type: string
+                  goodsReceiptQuantity:
+                    type: string
+                  goodsReceiptUom:
+                    type: string
+                  referenceItemDetail:
+                    type: object
+                    properties:
+                      poNumber:
+                        type: object
+                        properties:
+                          poNumberId:
+                            type: string
+                          poNumberItemId:
+                            type: string
+                        required:
+                          - poNumberId
+                          - poNumberItemId
+                      inboundDelivery:
+                        type: object
+                        properties:
+                          inboundDeliveryId:
+                            type: string
+                          inboundDeliveryItemId:
+                            type: string
+                        required:
+                          - inboundDeliveryId
+                          - inboundDeliveryItemId
+                    required:
+                      - poNumber
+                      - inboundDelivery
+                  batchItemDetails:
+                    type: array
+                    items:
+                      - type: object
+                        properties:
+                          batch:
+                            type: string
+                          vendorBatch:
+                            type: string
+                          expiryDate:
+                            type: string
+                          productionDate:
+                            type: string
+                        required:
+                          - batch
+                          - vendorBatch
+                          - expiryDate
+                          - productionDate
+                  serialNumberDetails:
+                    type: array
+                    items:
+                      - type: object
+                        properties:
+                          serialNumber:
+                            type: array
+                            items:
+                              - type: object
+                                properties:
+                                  serialNumber:
+                                    type: string
+                                required:
+                                  - serialNumber
+                              - type: object
+                                properties:
+                                  serialNumber:
+                                    type: string
+                                required:
+                                  - serialNumber
+                              - type: object
+                                properties:
+                                  serialNumber:
+                                    type: string
+                                required:
+                                  - serialNumber
+                              - type: object
+                                properties:
+                                  serialNumber:
+                                    type: string
+                                required:
+                                  - serialNumber
+                        required:
+                          - serialNumber
+                required:
+                  - materialId
+                  - deliveryPlant
+                  - storageLocation
+                  - goodsReceiptQuantity
+                  - goodsReceiptUom
+                  - referenceItemDetail
+                  - batchItemDetails
+                  - serialNumberDetails
+        required:
+          - DeliveryNote
+          - docDate
+          - grDate
+          - billOfLading
+          - headerText
+          - grIRSlip
+          - goodsReceiptItems
+  securitySchemes:
+    accessCode:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'http://example.com/oauth/auth'
+          tokenUrl: 'http://example.com/oauth/token'
+          scopes:
+            write: allows modifying resources
+            read: allows reading resources
