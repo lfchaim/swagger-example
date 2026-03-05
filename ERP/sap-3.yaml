@@ -1,0 +1,2648 @@
+swagger: '2.0'
+info:
+  description: >
+    # Introduction
+
+
+    The VersaPay API offers operations in support of its flagship products:
+
+    * ARC - accounts receivable platform with automated invoicing, effective
+    collaboration, flexible payments and cash application to improve efficiency
+    and customer relationships.
+
+      * Importing & exporting customers, invoices, and payments.
+
+      * Monitoring file based imports/batches.
+
+    * PayPort - cloud based platform to electronically push and pull funds
+    across the EFT / ACH network.
+
+      * Moving funds using transactions and pre-authorized debit agreements.
+
+      * A secure hosted checkout for accepting payments through your website or email.
+
+    Please contact us at support@versapay.com for support & setup of A/R
+    invoicing integration, hosted checkout, and/or payment acceptance.
+
+
+    ## Environments
+
+
+    The demo environment is a useful sandbox for integration testing where
+    transaction settlements are simulated using test account numbers and test
+    dollar amounts.
+
+
+    `https://demo.versapay.com`
+
+
+    Once integration testing is complete via the demo environment, start sending
+    your requests to the production URL to start moving money and/or integrating
+    with VersaPay.
+
+
+    `https://secure.versapay.com`
+
+
+    ## Rate Limits
+
+
+    There is a 60 request per minute API limit. Any requests above this limit
+    will result in HTTP return code `403 Forbidden (Rate Limit Exceeded)`.
+
+
+    ## Access to API Keys
+
+
+    Visit your account settings in [demo](https://demo.versapay.com/account) or
+    [production](https://secure.versapay.com/account) to setup API keys needed
+    for authentication as well as webhooks to receive relevant callbacks from
+    VersaPay transaction processing. You can generate/disable your API Keys as
+    often as necessary for security reasons.
+
+
+    If you do not have an account, please contact VersaPay Support for support &
+    setup of AR invoicing integration, hosted checkout and/or payment
+    acceptance.
+
+
+    # Authentication
+
+
+    API requests are authenticated using [HTTP Basic Access
+    Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication).
+    Simply provide the token/key values as the user and password parameters,
+    using cURL for instance:
+
+
+    `curl -u "Nvax...:UN0I..." -X POST https://secure.versapay.com/api/...`
+
+
+    # Testing Transactions
+
+
+    ## EFT Bank Account Numbers
+
+
+    In the demo environment, the following test bank accounts can be setup up in
+    your account.
+
+
+    |Institution|Institution Number|Branch|Account Number|
+
+    |:--|:--|:--|:--|
+
+    |TD|004|99960|1-12 digits|
+
+    |RBC|003|16824|1-12 digits|
+
+    |BMO|001|99520|1-12 digits|
+
+    |HSBC|016|10880|1-12 digits|
+
+
+    When VersaPay prompts you to verify these bank accounts enter a value of
+    `1.23` for the verification amount.
+
+
+    To determine the outcome of a transaction funded by a bank account, set the
+    amount accordingly:
+
+
+    |Amount|Resulting State|
+
+    |:--|:--|
+
+    |$x.10|nsfed|
+
+    |$x.11|completed_but_nsfed|
+
+    |$x.30|error|
+
+    |anything else|completed|
+
+
+    ## ACH Bank Account Numbers
+
+
+    Please contact support@versapay.com for support & setup of ACH acceptance
+    and bank account numbers that can be used for testing.
+
+
+    ## Credit Card Numbers
+
+
+    Please contact support@versapay.com for support & setup of Credit Card
+    acceptance and card brands/numbers that can be used for testing.
+
+
+    # Tools
+
+
+    ## Postman
+
+
+    Try out the API using [Postman app](https://www.getpostman.com/), a powerful
+    REST API client. Download the VersaPay API Reference as a Postman Collection
+    by clicking on the button below:
+
+
+    [![Run in
+    Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/7e34e0700a2f8c3074c6)
+
+
+    After downloading the collection, set up and configure the environment as
+    follows:
+
+
+    1. Download [the sample environment
+    file](https://developers.versapay.com/demo.postman_environment.json).
+
+
+    2. Import the environment file in Postman.
+
+      ![Import Environment](https://developers.versapay.com/images/import_environment.png)
+
+    3. Once it is imported, edit the environment to add API token and keys
+    associated to your test account.
+
+      ![Edit Environment](https://developers.versapay.com/images/edit_environment.png)
+
+    4. Click Update to save your changes.
+
+
+    5. Before placing API calls, make sure the correct environment is selected.
+
+      ![Select Environment](https://developers.versapay.com/images/select_environment.png)
+  version: 1.1.0
+  title: VersaPay API Reference
+  contact:
+    name: VersaPay Support
+    url: 'https://www.versapay.com/support'
+    email: support@versapay.com
+  x-logo:
+    url: 'https://developers.versapay.com/images/logo.png'
+host: secure.versapay.com
+schemes:
+  - https
+x-servers:
+  - url: 'https://secure.versapay.com'
+    description: Production
+  - url: 'https://demo.versapay.com'
+    description: Demo
+security:
+  - basicAuth: []
+consumes:
+  - application/json
+produces:
+  - application/json
+tags:
+  - name: Fund Sources
+    description: >
+      Fund Sources include bank accounts, credit cards, and balance associated
+      with your account. The tokenized representation of these fund sources can
+      be used to specify which fund to use when working with Transactions and
+      Debit Agreements.
+  - name: Transactions
+    description: >
+      Transactions are used to move funds between fund sources. The
+      directionality of the money transfer depends on the transaction type and
+      the specified from/to fund tokens.
+
+
+      ## Lifecycle
+
+
+      The lifecycle states of transaction settlement/flow are:
+
+
+      |State|Context|Action to Take|
+
+      |:--|:--|:--|
+
+      |`new`|The initial state for a new transaction.|N/A|
+
+      |`wait_for_claim`|The transaction has been created and an email delivered
+      to the other party. They have not yet signed up and approved the
+      transaction.|None. You may want to remind the other party if the payment
+      has not been approved for a sufficient length of time.|
+
+      |`wait_for_request_approval`|The requestee has an account already. They
+      have not yet approved the transaction.|None. You may want to remind the
+      other party if the payment has not been approved for a sufficient length
+      of time.|
+
+      |`wait_for_bank_account_verification`|The requestee has signed up and
+      accepted the transaction, however they have not yet verified their bank
+      account.<br><br>Note: Users are required to verify their bank account by
+      going through the micro-debit process in which VersaPay debits and credits
+      the user’s bank account an undisclosed amount. The user then checks their
+      online banking and fills in the amount on the VersaPay website.|None. You
+      may want to remind the other party if the bank has not been verified in a
+      sufficient length of time.|
+
+      |`rejected`|The transaction was rejected by the requestee.|Review the
+      rejection message.|
+
+      |`in_progress`|The transaction has been sent to the bank and is in
+      progress.|N/A|
+
+      |`error`|There was an error while processing the transaction.|Contact your
+      bank if the error pertains to your bank account.<br><br>Contact client or
+      create a new transaction if the error is with the other party’s bank
+      account.|
+
+      |`nsfed`|The transaction's selected fund has in-sufficient funds and the
+      transaction has been cancelled.|Contact your bank if the error pertains to
+      your bank account.<br><br>Contact client or create a new transaction if
+      the error is with the other party’s bank account.|
+
+      |`cancelled`|The transaction has been cancelled by an administrator. A
+      transaction can only be cancelled before the debit has been sent to the
+      bank.|N/A|
+
+      |`completed`|The transaction has been completed successfully.|Update your
+      order to "Paid".|
+
+      |`completed_but_nsfed`|The transaction was completed successfully, but has
+      been returned by the bank as in-sufficient funds.|Update your order to
+      "Un-paid".|
+
+
+      ## Webhooks
+
+
+      When using Webhooks, your application will be notified any time a
+      transaction's status has been updated. Note that for a variety of reasons
+      strict ordering of notifications cannot be guaranteed. We recommend any
+      integrations that track a "last seen" state either be aware of the flow of
+      states (downward on the preceeding list), or only track actionable states.
+  - name: Agreements
+    description: >
+      Debit Agreements are a digital analog to paper pre-authorized debit
+      agreements that businesses could use, for instance, for monthly billing.
+
+
+      The creator of an agreement can cancel at any time. The other party can
+      approve, reject, or later revoke an agreement at any time.
+
+
+      ## Lifecycle
+
+
+      The lifecycle states of debit agreements are:
+
+
+      |State|Context|Action to take|
+
+      |:--|:--|:--|
+
+      |`pending`|The recipient has been sent an email to approve the
+      agreement.|N/A|
+
+      |`approved`|The agreement has been approved.|Create a pre-authorized debit
+      transaction that references the agreement when you bill.|
+
+      |`rejected`|The agreement was rejected by the requestee.|Review the
+      rejection message.|
+
+      |`cancelled`|The agreement was cancelled by the requestor.|Cancel the
+      subscription with the other party.|
+
+      |`revoked`|The agreement was cancelled by the requestee.|Cancel the
+      subscription with the other party.|
+
+      |`wait_for_bank_account_verification`|The associated bank account has not
+      yet been verified.|None - The recipient has been notified.<br><br>Email
+      the recipient if the bank account is not verified within a reasonable
+      amount of time.|
+
+      |`invalid_funding_source`|There were errors with the associated bank
+      account or credit card.|None - The recipient has been notified to change
+      the funding source.<br><br>Email the recipient if the fund is not changed
+      within a reasonable amount of time.|
+
+
+      ## Webhooks
+
+
+      When using Webhooks, your application will be notified any time an
+      agreement’s status has been updated (see Lifecycle); allowing you to start
+      billing when approved or cancel a subscription when rejected or revoked.
+  - name: Hosted Checkout
+    description: >
+      Hosted checkout is a URL based method for accepting a payment through your
+      website or email without the need for custom programming.
+  - name: Customers
+  - name: Invoices
+  - name: Payments
+  - name: File Imports
+  - name: Webhooks
+    description: >
+      VersaPay uses the [Webhook](http://www.webhooks.org/) pattern to POST
+      updates to a HTTP (port 80) or HTTPS (port 443) URL you specify. The
+      specified URL must return a status code of 200 otherwise VersaPay will
+      continue attempting to deliver the POST up to a system defined number of
+      attempts.
+
+
+      You can view details for the latest notifications sent to your application
+      by visiting `/developers/webhook_responses` in
+      [demo](https://demo.versapay.com//developers/webhook_responses) or
+      [production](https://secure.versapay.com//developers/webhook_responses).
+
+
+      Webhooks can receive updates for the following:
+
+
+      * State updates of any **Transaction** created by your account or going to
+      your account. The request parameters will contain the same attributes as
+      returned by viewing a transaction via `GET /api/transactions/{token}`.
+
+
+      * State updates of any **Debit Agreement** created by your account or sent
+      to your account. The request parameters will contain the same attributes
+      as returned by viewing a debit agreement via `GET
+      /api/debit_agreements/{token}`.
+
+
+      VersaPay will append a [HMAC-SHA256](https://en.wikipedia.org/wiki/HMAC)
+      signature attribute to all webhook notifications. For instance:
+
+
+      ```
+
+      POST http://your.domain.com/your/webhook/url
+
+      {
+          "to_account":"Example user",
+          "token":"5TH3ACC3AU21",
+          "transaction_reference":"",
+          "from_account":"First1 Last1",
+          "from_fund":"THE TORONTO-DOMINION BANK",
+          "transaction_type":"send_money",
+          "amount_in_cents":500,
+          "type":"transaction",
+          "created_by_user":"699cMPe6BAyqvVsZA5mo",
+          "message":"",
+          "state":"completed",
+          "link_url":"",
+          "email":"user@example.com",
+          "signature":"USYpBfZFQQHa2%2BT6UtDPUVFfUPP0aobWpXe5DE9hPOY%3D%0A"
+      }
+
+      ```
+
+
+      To verify the authenticity of received webhook notifications:
+
+
+      1. Generate a single line request string concatenated with new line from:
+        
+        - The upper cased HTTP verb/method<br>
+        - The webhook URL<br>
+        - The attribute key/value pairs (without spaces) sorted ascending by key (**excluding the signature attribute**)<br>
+      2. Calculate the HMAC-SHA256 of the single line string along using your
+      VersaPay signing key (which is displayed on your webhook account settings)
+      and [Base64](https://en.wikipedia.org/wiki/Base64) the result.
+
+      3. [URL Encode](https://www.w3schools.com/tags/ref_urlencode.asp) the HMAC
+      and compare to the value of the `signature` attribute for a match.
+
+
+      ```ruby
+
+      # Example of HMAC-SHA256 signature calculation - using Rails/Sinatra our
+      POST payload is accessible via params
+
+
+      require 'openssl'
+
+      require 'base64'
+
+      require 'erb'
+
+
+      webhook_url = 'http://your.domain.com/your/webhook/url';
+
+      webhook_signing_key = 'v7aJHjbbxASKiwDW5wq6';
+
+
+      original_signature = params.delete(:signature)
+
+      sorted_key_values = params.keys.sort.map{ |key| "#{key}#{params[key]}"
+      }.join
+
+
+      request_string = "POST\n#{webhook_url}\n#{sorted_key_values}"
+
+
+      expected_signature = ERB::Util.url_encode( Base64.encode64(
+      OpenSSL::HMAC.digest(
+
+      OpenSSL::Digest::SHA256.new, webhook_signing_key, request_string
+
+      ) ) )
+
+
+      puts "\nexpected signature: #{expected_signature}"
+
+      puts "\noriginal signature: #{original_signature}"
+
+      puts "\nauthentic? #{expected_signature == original_signature}"
+
+      ```
+    x-traitTag: true
+x-tagGroups:
+  - name: PayPort
+    description: Operations available for PayPort integration.
+    tags:
+      - Fund Sources
+      - Webhooks
+      - Transactions
+      - Agreements
+      - Hosted Checkout
+  - name: ARC
+    description: Operations available for ARC integration.
+    tags:
+      - Customers
+      - Invoices
+      - Payments
+      - File Imports
+paths:
+  /api/funds:
+    get:
+      summary: View Your Fund Sources
+      operationId: getFundSources
+      tags:
+        - Fund Sources
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/FundSource'
+            example:
+              - type: bank_account
+                token: BA7YQ5881W8Q
+                name: TD Canada Trust (2929)
+                state: verified
+              - type: credit_card
+                token: CC7HPKMIUP2D
+                name: VISA **2224
+              - type: balance
+                token: VPB2VJ7W9UVW
+                name: VersaPay Account
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  /api/transactions:
+    post:
+      summary: Create Transactions
+      description: ''
+      operationId: createTransaction
+      tags:
+        - Transactions
+      parameters:
+        - in: body
+          name: body
+          description: Transaction to create.
+          required: true
+          schema:
+            $ref: '#/definitions/Transaction'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/TransactionResponse'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+        '412':
+          $ref: '#/responses/PreconditionFailed'
+    get:
+      summary: View Transactions
+      operationId: viewAllTransactions
+      tags:
+        - Transactions
+      parameters:
+        - name: page
+          type: integer
+          in: query
+          description: 50 items are displayed per page.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/TransactionResponse'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  '/api/transactions/{token}':
+    get:
+      summary: View a Transaction
+      operationId: viewTransaction
+      tags:
+        - Transactions
+      parameters:
+        - name: token
+          in: path
+          type: string
+          required: true
+          description: The transaction identifier.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            $ref: '#/definitions/TransactionResponse'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  '/api/transactions/{token}/approve':
+    post:
+      summary: Approve a Transaction
+      description: >
+        Approve a `new` or `wait_for_request_approval` transaction.<br>
+
+        An API key with administrative access is required to approve a
+        transaction.
+      operationId: approveTransaction
+      tags:
+        - Transactions
+      parameters:
+        - name: token
+          in: path
+          type: string
+          required: true
+          description: The transaction identifier.
+        - name: fund_token
+          in: body
+          schema:
+            type: object
+            properties:
+              fund_token:
+                type: string
+                description: >
+                  Your bank account or balance's **token** attribute. Omitting
+                  this option will approve the transaction using your default
+                  bank account.
+                example: 5TH3ACC3AU21
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            $ref: '#/definitions/TransactionResponse'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+        '412':
+          description: Precondition Failed
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message.
+            example:
+              error: >-
+                API token does not have permission for this request. Please
+                contact your account administrator.
+  '/api/transactions/{token}/cancel':
+    post:
+      summary: Cancel a Transaction
+      description: >
+        Cancel a `new`, `wait_for_request_approval` or
+        `wait_for_bank_account_verification` transaction you created.
+        Transactions cannot be cancelled after they have been sent to the bank
+        and are `in_progress`.<br>
+
+        An API key with administrative access is required to approve a
+        transaction.
+      operationId: cancelTransaction
+      tags:
+        - Transactions
+      parameters:
+        - name: token
+          in: path
+          type: string
+          required: true
+          description: The transaction identifier.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            $ref: '#/definitions/TransactionResponse'
+        '412':
+          description: Precondition Failed
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message.
+            example:
+              error: >-
+                API token does not have permission for this request. Please
+                contact your account administrator.
+  /api/debit_agreements:
+    post:
+      summary: Create an Agreement
+      description: ''
+      operationId: createAgreement
+      tags:
+        - Agreements
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                description: Recipient email address.
+                example: bob.smith@example.com
+              reference:
+                type: string
+                description: >-
+                  Extra useful data to help link transactions to other systems
+                  e.g. PO numbers, account numbers etc.
+                example: '87769089'
+              message:
+                type: string
+                description: A message describing what the agreement is for.
+                example: Debit agreement for order number - 87769089
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/Agreement'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+        '412':
+          $ref: '#/responses/PreconditionFailed'
+  /api/debit_agreements/sent:
+    get:
+      summary: View Sent Agreements
+      operationId: viewSentAgreements
+      tags:
+        - Agreements
+      parameters:
+        - name: page
+          type: integer
+          in: query
+          description: 50 items are displayed per page.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Agreement'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  /api/debit_agreements/received:
+    get:
+      summary: View Received Agreements
+      operationId: viewReceivedAgreements
+      tags:
+        - Agreements
+      parameters:
+        - name: page
+          type: integer
+          in: query
+          description: 50 items are displayed per page.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Agreement'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  '/api/debit_agreements/{token}/approve':
+    post:
+      summary: Approve an Agreement
+      operationId: approveAgreement
+      tags:
+        - Agreements
+      parameters:
+        - in: path
+          name: token
+          type: string
+          required: true
+          description: The agreement identifier.
+        - in: body
+          name: fund_token
+          schema:
+            type: object
+            properties:
+              fund_token:
+                type: string
+                description: >
+                  Your bank account or balance's token attribute. Omitting this
+                  option will approve the agreement using your default bank
+                  account.
+                example: 5TH3ACC3AU21
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/Agreement'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+        '412':
+          description: Precondition Failed
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+              description: Error message
+            example:
+              error: >
+                API token does not have permission for this request. Please
+                contact your account administrator.
+  '/api/debit_agreements/{token}/cancel':
+    post:
+      summary: Cancel an Agreement
+      operationId: cancelAgreement
+      tags:
+        - Agreements
+      parameters:
+        - in: path
+          name: token
+          type: string
+          required: true
+          description: The agreement identifier.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            $ref: '#/definitions/Agreement'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  '/api/debit_agreements/{token}/reject':
+    post:
+      summary: Reject an Agreement
+      description: >
+        Reject a *pending* agreement by supplying an agreement's *token*
+        attribute and providing a *rejection_reason*.
+      operationId: rejectAgreement
+      tags:
+        - Agreements
+      parameters:
+        - in: path
+          name: token
+          type: string
+          required: true
+          description: The agreement identifier.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            $ref: '#/definitions/Agreement'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  '/api/debit_agreements/{token}/revoke':
+    post:
+      summary: Revoke an Agreement
+      description: >
+        Revoke an *approved* agreement for your account by supplying an
+        agreement's token attribute. The agreement's creator will no longer be
+        able to debit your account using this agreement.
+      operationId: revokeAgreement
+      tags:
+        - Agreements
+      parameters:
+        - name: token
+          in: path
+          type: string
+          required: true
+          description: The agreement identifier.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            $ref: '#/definitions/Agreement'
+  /send_money:
+    get:
+      summary: Single Payment Hosted Checkout
+      description: >
+        Clients, customers, or donors, for instance, can send your organization
+        money directly from their bank account or credit card simply by clicking
+        a link which displays a page with your account name allowing your
+        customer to make a payment to you for the specified dollar amount:
+
+        <br>
+
+        `https://secure.versapay.com/send_money?api_token={your_api_token}&amount={dollar_amount_for_customer_to_pay}`
+
+        <br>
+
+        Funds will go to the fund destination passed in the to_fund parameter.
+        By default, the funds will be deposited into your default bank account
+        once the transaction clears from the other party.
+      operationId: hostedCheckout
+      tags:
+        - Hosted Checkout
+      parameters:
+        - name: api_token
+          in: query
+          type: string
+          required: true
+          description: A valid API token generated from your account.
+        - name: amount
+          in: query
+          type: number
+          required: true
+          description: The amount in dollars that the transaction is for.
+        - name: message
+          in: query
+          type: string
+          description: A message which will be stored with the transaction.
+        - name: return_to
+          in: query
+          type: string
+          description: >-
+            A url which will displayed to the user to return to your website
+            after they finish the Signup and Confirmation.
+        - name: link_url
+          in: query
+          type: string
+          description: >-
+            A url that gets stored and displayed on the transaction for an
+            invoice.
+        - name: pref
+          in: query
+          type: string
+          description: >-
+            The preferred payment type either `ba` or `cc` for bank or credit
+            card respectively.
+        - name: to_fund
+          in: query
+          type: string
+          description: >-
+            The token of the bank account or balance where the funds should go
+            to.
+        - name: reference
+          in: query
+          type: string
+          description: >-
+            Extra data (max 255 characters). Great for storing internal order or
+            account number.
+        - name: locale
+          in: query
+          type: string
+          description: >-
+            Set the default language of the checkout, either `en` or `fr`. Users
+            will still be able to switch to their preferred language.
+      responses:
+        '200':
+          description: Successful Operation
+  /authorize:
+    get:
+      summary: Debit Agreement Hosted Checkout
+      description: >
+        Clients, customers, or donors, for instance, can initiate a
+        pre-authorized debit agreement by clicking a link on your website or in
+        an email.
+
+        <br>
+
+        `https://secure.versapay.com/authorize?api_token={your_api_token}&message={explanation_of_what_this_is_for}`
+
+        <br>
+      tags:
+        - Hosted Checkout
+      parameters:
+        - name: api_token
+          in: query
+          type: string
+          required: true
+          description: A valid API token generated from your account.
+        - name: message
+          in: query
+          type: string
+          required: true
+          description: >-
+            A message for the user describing the pre-authorized debit
+            agreement.
+        - name: return_to
+          in: query
+          type: string
+          description: >-
+            A url which will displayed to the user to return to your website
+            after they finish the Signup and Confirmation.
+        - name: reference
+          in: query
+          type: string
+          description: >-
+            Extra data (max 255 characters). Great for storing internal order or
+            account number.
+      responses:
+        '200':
+          description: Successful Operation
+  /api/imports/customer:
+    post:
+      summary: Create and Update Customer
+      operationId: createCustomer
+      description: >
+        Create a customer in ARC using the following attributes (at minimum by
+        providing values for required attributes). If providing an identifier
+        for an existing customer, its information is updated.<br><br>
+
+        *Note: Any additional non-standard attribute will be stored with
+        customer record and available for presentment rendering.*
+      tags:
+        - Customers
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/Customer'
+      responses:
+        '201':
+          description: Created
+          schema:
+            type: object
+            properties:
+              identifier:
+                type: string
+                example: C1234
+              message:
+                type: string
+                example: 1 customer with 3 contacts
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+        '412':
+          $ref: '#/responses/PreconditionFailed'
+  /api/imports/invoice:
+    post:
+      summary: Create and Update Invoice
+      description: >
+        Create and update invoices in ARC. If the invoice already exists when a
+        request is processed, it will be updated.<br><br>
+
+        The set of attributes to send in the request body may vary based on the
+        account configuration. Please contact the implementation specialist for
+        more information.<br><br>
+
+        *Note:*
+          * *Customer will be created/updated using the customer_&ast; attributes if necessary at time of invoice import.*
+          * *Any additional non-standard attribute will be stored with invoice record and available for presentment rendering.*
+      operationId: createInvoice
+      tags:
+        - Invoices
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/Invoice'
+      responses:
+        '201':
+          description: Created
+          schema:
+            type: object
+            properties:
+              identifier:
+                type: string
+                example: INV002
+              message:
+                type: string
+                example: 1 invoice 1 line items
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+        '412':
+          $ref: '#/responses/PreconditionFailed'
+  /api/imports/payment:
+    post:
+      summary: Create a Payment
+      description: >
+        Create and update external payment records in ARC.<br><br>The set of
+        attributes to send in the request body may vary based on the account
+        configuration. Please contact the implementation specialist for more
+        information.<br><br>
+
+        The request schema for posting a payment for a single invoice is
+        slightly different than that for posting a payment for multiple
+        invoices.
+
+
+        For instance, sample request for posting payment for a single invoice
+        looks like:
+
+        ```
+
+        {
+          "identifier": "PMT0010-05",
+          "invoice_number": "INV1234-01",
+          "amount": 10000,
+          "currency": "usd",
+          "date": "2018-01-10",
+          "customer_identifier": "C1234",
+          "customer_name": "Acme Inc.",
+          "notes": "Notes",
+          "ref1": "1234",
+          "ref2": "PO# 84767"
+        }
+
+        ```
+
+
+        *Note: Customer will be created using the customer_&ast; attributes if
+        it doesn’t already exist at the time of payment import.*
+      operationId: createPayment
+      tags:
+        - Payments
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/PaymentImport'
+      responses:
+        '201':
+          description: Created
+          schema:
+            type: object
+            properties:
+              identifier:
+                type: string
+                example: PMT123
+              message:
+                type: string
+                example: 1 payment 1 invoice amounts
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+        '412':
+          $ref: '#/responses/PreconditionFailed'
+  /api/imports:
+    post:
+      summary: Import a CSV File
+      description: >
+        When uploading a CSV-formatted file it’s helpful to use your
+        language/framework tooling to simplify the
+        [multipart/form-data](https://www.ietf.org/rfc/rfc2388.txt) file upload.
+
+        ### Size Limit
+
+        The file cannot exceed 25MB.
+
+        ### Layouts
+
+        Please contact support@versapay.com or reach out to your implementation
+        specialist for standard inbound CSV file layouts.
+      operationId: importBatchFile
+      consumes:
+        - multipart/form-data
+      tags:
+        - File Imports
+      parameters:
+        - in: formData
+          name: file
+          required: true
+          type: file
+          description: The file to upload.
+        - in: formData
+          name: filename
+          type: string
+          description: Name of original file.
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/FileImport'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+      x-code-samples:
+        - lang: cURL
+          source: |
+            curl \
+            -u "Nvax...:UN0I..." \
+            -F "filename=data.csv" \
+            -F "file=@/home/user/Desktop/data.csv" \
+            https://secure.versapay.com/api/imports/
+        - lang: Ruby
+          source: >
+            file = { :file => File.new('/home/user/Desktop/data.csv') }
+
+            auth = { :basic_auth => { :username => 'Nvax...', :password =>
+            'UN0I...' } }
+
+            HTTMultiParty.post('https://secure.versapay.com/api/imports/',
+            auth.merge( :query => file ))
+    get:
+      summary: View In-Progress & Completed Batches
+      description: View recent in-progress and completed import batches.
+      operationId: viewAllBatches
+      tags:
+        - File Imports
+      parameters:
+        - name: page
+          in: query
+          type: integer
+          description: 50 items are displayed per page.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/FileImport'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  /api/imports/processing:
+    get:
+      summary: View In-Progress Batches
+      description: View only recent in-progress import batches.
+      operationId: viewInProgressBatches
+      tags:
+        - File Imports
+      parameters:
+        - name: page
+          in: query
+          type: integer
+          description: 50 items are displayed per page.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/FileImport'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  /api/imports/completed:
+    get:
+      summary: View Completed Batches
+      description: View only recent completed import batches.
+      operationId: viewCompletedBatches
+      tags:
+        - File Imports
+      parameters:
+        - name: page
+          in: query
+          type: integer
+          description: 50 items are displayed per page.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/FileImport'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  '/api/imports/{id}':
+    get:
+      summary: View Batch Details
+      operationId: viewBatchDetail
+      tags:
+        - File Imports
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The import batch identifier.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            $ref: '#/definitions/FileImport'
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  /api/exports/payment_amounts:
+    get:
+      summary: Payments made in ARC
+      description: >
+        Payments made to your supplier account from your customers since
+        watermark, limited to 100 payment amounts at a time.<br><br>A consumer
+        should store the last `id` value of each response and include it as the
+        watermark parameter for a subsequent calls.
+      operationId: getARCPayments
+      tags:
+        - Payments
+      parameters:
+        - name: watermark
+          in: query
+          type: integer
+          description: >-
+            The `id` value to base a subsequent extract of the next 100 payment
+            amounts.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            type: object
+            properties:
+              payment_amounts:
+                type: object
+                additionalProperties:
+                  $ref: '#/definitions/PaymentExport'
+          examples:
+            application/json: |
+              {
+                "payment_amounts": {
+                    "1591737": {
+                        "payment_reference": "4TQRLRCHY7TT",
+                        "invoice_number": "INV001",
+                        "date": "2017-12-16",
+                        "amount": "10.00",
+                        "plan_fee": "0.00",
+                        "payment_amount": "10.00",
+                        "payment_transaction_amount": "10.00",
+                        "payment_method": " (6567)",
+                        "payment_from_bank_account": true,
+                        "payment_from_credit_card": false,
+                        "payment_institution_name": null,
+                        "payment_credit_card_brand": null,
+                        "short_pay_indicator": "Y",
+                        "payment_note": null,
+                        "auto_debit_indicator": "N",
+                        "invoice_balance": "140.00",
+                        "payment_timestamp": "2017-12-16T20:18:30-05:00",
+                        "invoice_division": null,
+                        "invoice_division_number": null,
+                        "invoice_division_name": null,
+                        "pay_to_bank_account": "300987898",
+                        "pay_to_bank_account_name": " (7898)",
+                        "customer_identifier": "CUS001",
+                        "customer_name": "Acme Inc.",
+                        "status": "PAID",
+                        "payment_source": "ARC",
+                        "payment_code": null,
+                        "payment_description": null,
+                        "gateway_authorization_code": "TM0FED",
+                        "purchase_order_number": null,
+                        "ref1": null,
+                        "ref2": null,
+                        "ref3": null,
+                        "short_pay_reason_identifier": null,
+                        "short_pay_reason": null,
+                        "invoice_amount_paid": "30.00",
+                        "invoice_identifier": "supplier|INV001",
+                        "invoice_date": "2017-11-01",
+                        "invoice_external_id": null,
+                        "invoice_currency": "usd",
+                        "invoice_purchase_order_number": "PO-3847",
+                        "invoice_ref1": null,
+                        "invoice_ref2": null,
+                        "invoice_ref3": null,
+                        "cumulative_customer_amount": "10.00",
+                        "line_item_transactional_amounts": [
+                          {
+                            "line_item_number": "001",
+                            "line_item_payment_amount": "8.00",
+                            "line_item_balance": "50.00",
+                            "line_item_short_pay_indicator": "Y",
+                            "line_item_payment_note": "will pay tomorrow",
+                            "line_item_short_pay_reason_identifier": null,
+                            "line_item_short_pay_reason": null
+                          },
+                          {
+                            "line_item_number": "002",
+                            "line_item_payment_amount": "2.00",
+                            "line_item_balance": "90.00",
+                            "line_item_short_pay_indicator": "Y",
+                            "line_item_payment_note": "will pay tomorrow",
+                            "line_item_short_pay_reason_identifier": null,
+                            "line_item_short_pay_reason": null
+                          }
+                        ]
+                    }
+                }
+              }
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+  /api/exports/disputes:
+    get:
+      summary: Open and Closed Disputes
+      description: >-
+        Open and closed disputes since watermark, limited to 100 disputes at a
+        time.
+      operationId: getDisputes
+      tags:
+        - Invoices
+      parameters:
+        - name: watermark
+          in: query
+          type: string
+          description: >-
+            The date value to base a subsequent extract of the next 100
+            disputes.
+      responses:
+        '200':
+          description: Successful Operation
+          schema:
+            $ref: '#/definitions/Dispute'
+          examples:
+            application/json: |
+              { "disputes":
+                { "518": { 
+                      "closed_at": "2018-01-01T13:06:56-05:00",
+                      "opened_at": "2017-12-16T20:44:37-05:00",
+                      "opener": "customer@example.com",
+                      "closer": "supplier@example.com",
+                      "opening_comment_text": "Damaged goods. Please correct the amount.",
+                      "closing_comment_text": "Invoice will be credited. Please pay the rest.",
+                      "invoice_number": "INV001",
+                      "invoice_balance": {
+                          "usd": 12000
+                      },
+                      "dispute_reason_identifier": null,
+                      "dispute_reason_label_en": "",
+                      "dispute_reason_label_fr": "",
+                      "opening_comment_users_notified": [],
+                      "closing_comment_user_notified": [],
+                      "creator_business_name": "Acme Inc.",
+                      "closer_business_name": "Supplier Corp.",
+                      "invoice_amount_paid": "30.00",
+                      "invoice_identifier":"supplier|INV001",
+                      "invoice_external_id": null
+                  }
+                }
+              }
+        '401':
+          $ref: '#/responses/UnauthorizedError'
+definitions:
+  FundSource:
+    type: object
+    properties:
+      type:
+        type: string
+        description: |
+          Type of fund:
+            * `bank_account` - Bank Account
+            * `credit_card` - Credit Card
+            * `balance` - VersaPay Account
+        enum:
+          - bank_account
+          - credit_card
+          - balance
+      token:
+        type: string
+        description: >-
+          Fund's unique identifier used to identify fund when using other API
+          calls.
+      name:
+        type: string
+        description: Masked display name of the fund source.
+      state:
+        type: string
+        enum:
+          - verified
+          - unverified
+          - invalid
+        description: Returned for bank accounts only.
+  Transaction:
+    x-extendedDiscriminator: transaction_type
+    type: object
+    required:
+      - amount_in_cents
+      - email
+      - transaction_type
+    properties:
+      transaction_type:
+        type: string
+      amount_in_cents:
+        type: integer
+        description: Transaction amount in cents.
+      email:
+        type: string
+        format: email
+        description: Recipient email address.
+      message:
+        type: string
+        description: A message describing the transaction.
+      transaction_reference:
+        type: string
+        description: >-
+          Extra useful data to help link transactions to other systems e.g. PO
+          numbers, account numbers etc.
+      unique_reference:
+        type: string
+        description: >-
+          Similar to transaction_reference, except it must be unique. Can be
+          used as a duplicate transaction check.
+      process_on:
+        type: string
+        format: date
+        description: The date `YYYY-MM-DD` when this transaction should be started.
+      auto_withdraw:
+        type: boolean
+        description: >-
+          Set `true` to have transaction auto settle from VersaPay balance to
+          the specified bank account the night of completion; `false` to settle
+          directly to VersaPay balance. Auto withdraw must be enabled for your
+          account. Only applicable to request and pre_authorized_debit
+          transactions.
+    example:
+      transaction_type: send
+      amount_in_cents: 20000
+      email: bob@example.com
+      message: Thank you
+      transaction_reference: Order 3487
+      process_on: '2018-01-05'
+      fund_token: BA9G329DNFPK
+  SendTransaction:
+    allOf:
+      - $ref: '#/definitions/Transaction'
+      - properties:
+          transaction_type:
+            type: string
+            enum:
+              - send
+          debit_agreement_token:
+            type: string
+            description: >-
+              The token that represents a pre-authorized agreement, see
+              Agreements.
+          fund_token:
+            type: string
+            description: Token of fund to use as the source.
+          credit:
+            type: boolean
+            description: >-
+              Set `true` to send money with VersaPay credit. Your account must
+              be credit enabled.
+          link_url:
+            type: string
+            description: >-
+              A specified url associated with transaction for instance linking
+              to an invoice.
+  RequestTransaction:
+    allOf:
+      - $ref: '#/definitions/Transaction'
+      - properties:
+          transaction_type:
+            type: string
+            enum:
+              - request
+          debit_agreement_token:
+            type: string
+            description: >-
+              The token that represents a pre-authorized agreement, see
+              Agreements.
+          fund_token:
+            type: string
+            description: Token of fund to use as the destination.
+          link_url:
+            type: string
+            description: >-
+              A specified url associated with transaction for instance linking
+              to an invoice.
+  DirectDebitTransaction:
+    allOf:
+      - $ref: '#/definitions/Transaction'
+      - properties:
+          transaction_type:
+            type: string
+            enum:
+              - direct_debit
+          fund_token:
+            type: string
+            description: Token of fund to use as the destination direct_debit.
+          memo:
+            type: string
+            description: Memo displayed on customer banking statement.
+          business_name:
+            type: string
+            description: Required if first_name and last_name are omitted.
+          first_name:
+            type: string
+            description: First name of recipient.
+          last_name:
+            type: string
+            description: Last name of recipient.
+          to_fund_token:
+            type: string
+            description: >-
+              May be provided instead of destination bank numbers on subsequent
+              transactions when `transaction_type` is `direct_credit`.
+          from_fund_token:
+            type: string
+            description: >-
+              May be provided instead of source bank numbers on subsequent
+              transactions when `transaction_type` is `direct_debit`.
+          institution_number:
+            type: string
+            minLength: 3
+            maxLength: 3
+            description: >-
+              Canadian Bank Account institution number. 3 digits. Required for
+              new funding sources. Omitted if using
+              `to_fund_token`/`from_fund_token` instead.
+          branch_number:
+            type: string
+            minLength: 4
+            maxLength: 5
+            description: >-
+              Canadian Bank Account branch number. Between 4-5 digits. Required
+              for new funding sources. Omitted if using
+              `to_fund_token`/`from_fund_token` instead.
+          account_number:
+            type: string
+            minLength: 1
+            maxLength: 12
+            description: >-
+              US or Canadian Bank Account number. Between 1-12 digits Required
+              for new funding sources. Omitted if using
+              `to_fund_token`/`from_fund_token` instead.
+          routing_number:
+            type: string
+            description: >-
+              US Bank Account routing number. Required for new funding sources.
+              Omitted if using `to_fund_token`/`from_fund_token` instead.
+          account_type:
+            type: string
+            description: >-
+              US Bank Account type `checking` or `savings`. Required for new
+              funding sources. Omitted if using
+              `to_fund_token`/`from_fund_token` instead.
+            enum:
+              - checking
+              - savings
+  DirectCreditTransaction:
+    allOf:
+      - $ref: '#/definitions/Transaction'
+      - properties:
+          transaction_type:
+            type: string
+            enum:
+              - direct_credit
+          fund_token:
+            type: string
+            description: Token of fund to use as the source direct_credit.
+          memo:
+            type: string
+            description: Memo displayed on customer banking statement.
+          business_name:
+            type: string
+            description: Required if first_name and last_name are omitted.
+          first_name:
+            type: string
+            description: First name of recipient.
+          last_name:
+            type: string
+            description: Last name of recipient.
+          to_fund_token:
+            type: string
+            description: >-
+              May be provided instead of destination bank numbers on subsequent
+              transactions when `transaction_type` is `direct_credit`.
+          from_fund_token:
+            type: string
+            description: >-
+              May be provided instead of source bank numbers on subsequent
+              transactions when `transaction_type` is `direct_debit`.
+          routing_number:
+            type: string
+            description: >-
+              US Bank Account routing number. Required for new funding sources.
+              Omitted if using `to_fund_token`/`from_fund_token` instead.
+          account_type:
+            type: string
+            description: >-
+              US Bank Account type `checking` or `savings`. Required for new
+              funding sources. Omitted if using
+              `to_fund_token`/`from_fund_token` instead.
+            enum:
+              - checking
+              - savings
+          institution_number:
+            type: string
+            minLength: 3
+            maxLength: 3
+            description: >-
+              Canadian Bank Account institution number. 3 digits. Required for
+              new funding sources. Omitted if using
+              `to_fund_token`/`from_fund_token` instead.
+          branch_number:
+            type: string
+            minLength: 4
+            maxLength: 5
+            description: >-
+              Canadian Bank Account branch number. Between 4-5 digits. Required
+              for new funding sources. Omitted if using
+              `to_fund_token`/`from_fund_token` instead.
+          account_number:
+            type: string
+            minLength: 1
+            maxLength: 12
+            description: >-
+              US or Canadian Bank Account number. Between 1-12 digits Required
+              for new funding sources. Omitted if using
+              `to_fund_token`/`from_fund_token` instead.
+  TransactionResponse:
+    type: object
+    properties:
+      token:
+        type: string
+        description: The transaction identifier.
+      amount_in_cents:
+        type: integer
+        description: Transaction amount in cents.
+      email:
+        type: string
+        description: Recipient email address.
+      message:
+        type: string
+        description: A message describing the transaction.
+      state:
+        type: string
+        enum:
+          - new
+          - wait_for_claim
+          - wait_for_request_approval
+          - wait_for_bank_account_verification
+          - rejected
+          - in_progress
+          - error
+          - nsfed
+          - cancelled
+          - completed
+          - completed_but_nsfed
+        description: 'Transactions current state, see Transaction Lifecycle.'
+      from_account:
+        type: string
+        description: Name of the originating account.
+      to_account:
+        type: string
+        description: Name of the recipient account.
+      from_fund:
+        type: string
+        description: >
+          Name of the balance or bank account used when **transaction_type** is
+          'send' or 'direct_credit'.
+      to_fund:
+        type: string
+        description: >
+          Name of the destination balance or bank account when
+          **transaction_type** is 'request' or 'direct_debit'.
+      transaction_reference:
+        type: string
+        description: Reference value associated with the transaction.
+      unique_reference:
+        type: string
+        description: >-
+          Similar to transaction_reference, except it must be unique. Can be
+          used as a duplicate transaction check.
+      link_url:
+        type: string
+        description: A specified url associated with transaction.
+      process_on:
+        type: string
+        description: The YYYY-MM-DD date when this transaction will be started.
+      created_by_user:
+        type: string
+        format: uuid
+      auto_withdraw:
+        type: boolean
+        description: >
+          If `true` then the transaction will be auto withdrawn the night of
+          completion.
+      auto_withdrawal_token:
+        type: string
+    example:
+      token: 79VMZNLXCBL9
+      amount_in_cents: 15000
+      message: Thank you for doing business
+      link_url: 'http://a.link.to/your/invoice'
+      type: transaction
+      transaction_type: send_money
+      email: bob.smith@example.com
+      state: in_progress
+      transaction_reference: Lease 123
+      unique_reference: null
+      from_account: John Doe
+      to_account: Jane Smith
+      process_on: null
+      from_fund: TD Canada Trust
+      created_by_user: Uf6TaxzBMBBT_rXjsrN7
+  Agreement:
+    type: object
+    properties:
+      token:
+        type: string
+        description: The agreement identifier.
+      state:
+        type: string
+        description: 'Transaction''s current state, see Transaction Lifecycle.'
+      email:
+        type: string
+        description: Recipient email address.
+      name:
+        type: string
+        description: Recipient name.
+      created_by_user:
+        type: string
+        description: >-
+          Name of the user otherwise the API token appears if the transaction
+          was created with the api.
+      created_by_account:
+        type: string
+        description: >-
+          Account name of the user otherwise the API token appears if the
+          transaction was created with the api.
+      reference:
+        type: string
+        description: An optional reference.
+      message:
+        type: string
+        description: A message describing the agreement.
+      rejection_reason:
+        type: string
+        description: |
+          Message for the creator of an agreement. Set when state is `rejected`.
+      type:
+        type: string
+        description: |
+          Type of agreement - `debit_agreement`.
+    example:
+      token: 3TJWJB36M973
+      state: pending
+      name: John Doe
+      email: user@example.com
+      reference: Ad 123
+      message: Thank you for your business
+      type: debit_agreement
+      created_by_user: Uf6TaxzBMBBT_rXjsrN7
+      created_by_account: Central Media News
+  Customer:
+    type: object
+    required:
+      - identifier
+      - name
+    properties:
+      identifier:
+        type: string
+        description: 'Customer number, must be unique within supplier. Alphanumeric.'
+        example: C1234
+      name:
+        type: string
+        description: Customer name.
+        example: Acme Inc.
+      email:
+        type: string
+        format: email
+        description: Email address of the primary contact.
+        example: bob.smith@example.com
+      first_name:
+        type: string
+        description: First name of the primary contact.
+        example: Bob
+      last_name:
+        type: string
+        description: Last name of the primary contact.
+        example: Smith
+      notes:
+        type: string
+        description: Optional text field up to 64K.
+        example: Payment terms will be revised next year.
+      address_1:
+        type: string
+        description: Billing address line 1.
+        example: 200 Main Street
+      address_2:
+        type: string
+        description: Billing address line 2.
+        example: Suite 250
+      city:
+        type: string
+        description: Billing address - city.
+        example: Toronto
+      province:
+        type: string
+        description: Billing address - state or province.
+        example: 'ON'
+      postal_code:
+        type: string
+        description: Billing address - zip or postal code.
+        example: M5M 5M5
+      country:
+        type: string
+        description: Billing address - country.
+        example: CA
+      telephone:
+        type: string
+        description: Customer phone number.
+        example: (416) 123-4567
+      fax:
+        type: string
+        description: Customer fax number.
+        example: (416) 100-1020
+      url:
+        type: string
+        format: uri
+        description: Customer web site.
+        example: www.acmeinc.com
+      business_number:
+        type: string
+        description: Customer EIN or Business Number. 20-character alphanumeric.
+        example: GS324587987
+      locale:
+        type: string
+        description: 'Customer language, based on ISO 639-1 standard.'
+        enum:
+          - en
+          - fr
+      parent_identifier:
+        type: string
+        description: >-
+          Required if the customer is part of a hierarchy, and this customer has
+          a level (parent) above it. This is the identifier of the customer
+          immediately above this customer in the tree.
+        example: P3212
+      pdf_attachment_opt_in:
+        type: boolean
+        description: >-
+          If `true`, the customer will receive PDFs of invoices and attachments
+          with all invoice notifications.
+        default: false
+      account_status:
+        type: string
+        description: The status of the customer's account with the supplier.
+        enum:
+          - open
+          - closed
+          - on_hold
+        default: open
+      last_contact_date:
+        type: string
+        format: date
+        description: >-
+          The last time the customer was contacted. It is ignored if the
+          customer already has a last contact date and it is more recent than
+          this one.
+        example: '2017-12-04'
+      next_contact_date:
+        type: string
+        format: date
+        description: >-
+          The date of the next planned contact with the customer. This always
+          overwrites what is on the customer.
+        example: '2018-02-15'
+      credit_limit_cents:
+        type: integer
+        description: >-
+          The customer's credit limit. This is the maximum value of outstanding
+          invoices before the supplier is alerted, if supplier is configured to
+          monitor this. If the customer is a multi-currency customer, this is
+          the total credit limit converted to a single currency (see next
+          field.)
+        example: '2000000'
+      credit_limit_currency:
+        type: string
+        description: >-
+          Currency of the credit limit. If blank, defaults to the currency of
+          the majority of the customer's invoices. If there are no invoices,
+          defaults to the supplier’s default currency.
+        example: CAD
+      credit_rating:
+        type: string
+        description: Credit rating for the customer.
+        example: AA
+      terms_type:
+        type: string
+        description: This field and `terms_value` specify how to set a customer's due date.
+        enum:
+          - date
+          - day
+      terms_value:
+        type: integer
+        description: >
+          This field and `terms_type` specify how to set a customer's invoice
+          due date.
+
+
+          If terms_type is 'day':
+
+
+          * It means the due date should be <terms_value> days after invoice
+          date.
+
+          * E.g. if terms_value is 30, the due date must be 30 days after the
+          invoice date.
+
+          * It must be a whole number between 0 and 100.
+
+
+          If terms_type is 'date':
+
+
+          * It means the due date is on a fixed day (terms_value) of the month.
+
+          * E.g. if terms_value is 15, it means the due date should be on the
+          15th of the month after invoice date.
+
+          * It must be an integer between 1 and 27 inclusive, or -1 to specify
+          the last day of the month, or -2 to specify the second-last day of the
+          month.
+        example: 15
+      company_bio:
+        type: string
+        description: Short description of products and services that the customer offers.
+        example: Acme Inc. sells cutting-edge widgets.
+      ignores_cc_payment_rules:
+        type: boolean
+        description: >-
+          If this is `true`, it means that the customer is not subject to any
+          credit card payment rules, and is free to use credit cards any time.
+        default: false
+        example: 'false'
+      tags:
+        type: string
+        description: One or more tags separated by semi-colons.
+        example: Blue;Green;Yellow
+      external_id:
+        type: string
+        description: External (ERP-based) identifier for the customer record.
+      line_item_attributes:
+        type: array
+        items:
+          $ref: '#/definitions/Contact'
+        example:
+          - email: jane.smith@example.com
+            first_name: Jane
+            last_name: Smith
+            telephone: 809-888-1234
+            title: Buyer
+          - email: bob.smith@example.com
+            first_name: Bob
+            last_name: Smith
+            title: Manager
+            department: Accounts Payable
+            telephone: 809-345-9833
+          - email: steve.jobs@example.com
+            first_name: Steve
+            last_name: Jobs
+            title: CEO
+  Contact:
+    type: object
+    required:
+      - email
+    properties:
+      email:
+        type: string
+        description: Email address of the contact.
+        format: email
+      first_name:
+        type: string
+        description: First name of the contact.
+      last_name:
+        type: string
+        description: Last name of the contact.
+      title:
+        type: string
+        description: Title of the contact.
+      department:
+        type: string
+        description: Department of the contact.
+      telephone:
+        type: string
+        description: Phone number of the contact.
+  Invoice:
+    type: object
+    required:
+      - number
+      - customer_identifier
+    properties:
+      number:
+        type: string
+        description: 'Invoice number, must be unique within supplier.'
+      display_number:
+        type: string
+        description: >
+          Invoice number as displayed to customers. Optional if this is the same
+          as `number`.
+      currency:
+        type: string
+        description: 'Currency code, based on ISO-4217. E.g. `CAD`, `USD`, `AUD`'
+      amount:
+        type: integer
+        description: The invoice amount in cents.
+      subtotal_tax1:
+        type: integer
+        description: Tax amount in cents.
+      subtotal_tax2:
+        type: integer
+        description: >-
+          Additional field to carry tax amount (in cents). For example, when
+          invoice shows state (provincial) and federal taxes.
+      customer_identifier:
+        type: string
+        description: Unique identifier for customer.
+      date:
+        type: string
+        format: date
+        description: 'Invoice date, YYYY-MM-DD, based on ISO-8601.'
+      order_date:
+        type: string
+        format: date
+        description: 'Order date, YYYY-MM-DD.'
+      due_date:
+        type: string
+        format: date
+        description: 'Invoice due date, YYYY-MM-DD.'
+      purchase_order_number:
+        type: string
+        description: Purchase order number.
+      notes:
+        type: string
+        description: Optional text field up to 64K.
+      shipping_name:
+        type: string
+        description: 'Shipping address: recipient name'
+      shipping_address_1:
+        type: string
+        description: 'Shipping address: line 1'
+      shipping_address_2:
+        type: string
+        description: 'Shipping address: line 2'
+      shipping_city:
+        type: string
+        description: 'Shipping address: city'
+      shipping_province:
+        type: string
+        description: >-
+          Shipping address: state or province. Based on the second part (after
+          hyphen) of codes in ISO 3166-2 standard. E.g. "ON" for Ontario, "CA"
+          for California
+      shipping_postal_code:
+        type: string
+        description: 'Shipping address: zip or postal code'
+      line_item_attributes:
+        type: array
+        description: >-
+          Details of each line-item for the invoice. Any additional non-standard
+          attribute will be stored with the line-item record and available for
+          presentment rendering.
+        items:
+          $ref: '#/definitions/LineItem'
+      auto_debit:
+        type: string
+        description: >
+          `Y` (invoice is to be auto-paid if customer has pre-authorized
+          payment) or `N` (invoice is to be paid manually by customer)
+        enum:
+          - 'Y'
+          - 'N'
+      division:
+        type: string
+        description: Division Code. Required only if supplier supports divisions.
+      auto_pay_reference:
+        type: string
+        description: >-
+          For AutoPay agreements that reference a policy# or contract#, etc.,
+          specify that number.
+      owing_cents:
+        type: integer
+        description: >
+          Balance remaining on this invoice or credit memo.
+
+
+          Required if supplier is configured for Balance Sync, otherwise
+          ignored.
+      ref1:
+        type: string
+        description: >-
+          A reference that is meaningful to the customer, e.g. Policy number,
+          contract number, etc.
+      ref2:
+        type: string
+        description: As above.
+      ref3:
+        type: string
+        description: As above.
+      adjustments_attributes:
+        type: array
+        description: Adjustments such as Fuel Surcharge or Discount.
+        items:
+          type: object
+          properties:
+            label:
+              type: string
+              description: Label for adjustment amount.
+            amount:
+              type: integer
+              description: Adjustment amount in cents.
+      plan_identifier:
+        type: string
+        description: >
+          Payment plan template identifier. If populated, this puts the invoice
+          on a payment plan.
+
+
+          Required if supplier is configured for payment plans.
+      plan_start_date:
+        type: string
+        format: date
+        description: >-
+          Payment plan start date. Required if supplier is configured for
+          payment plans.
+      plan_end_date:
+        type: string
+        format: date
+        description: >-
+          Payment plan end date. Required if supplier is configured for payment
+          plans.
+      plan_payment_amount:
+        type: integer
+        description: >-
+          Payment plan recurring payment amount. Required if supplier is
+          configured for payment plans.
+      annualized_amount:
+        type: integer
+        description: >
+          The annual invoice amount. When this is populated, the importer will
+          calculate a pro-rated invoice amount based on the next two dates.
+
+
+          Required if the supplier is configured for payment plans.
+      annualized_effective_date:
+        type: string
+        format: date
+        description: >-
+          The date that the annualized_amount takes effect. Mandatory if
+          annualized_amount is populated.
+      annualized_expiry_date:
+        type: string
+        format: date
+        description: >
+          The end date of the period for which the annualized_amount is in
+          effect.
+
+
+          Mandatory if annualized_amount is populated. The difference between
+          this date and the effective date (inclusive) is used to pro-rate the
+          invoice amount or any adjustments to the amount.
+      external_id:
+        type: string
+        description: >-
+          Optional external identifier for the invoice to be included in payment
+          exports.
+    example:
+      number: sh763-h3454-dh3432
+      display_number: INV1234
+      customer_identifier: CUS001
+      purchase_order_number: PO-3847
+      amount: 40000
+      currency: usd
+      date: '2017-11-01'
+      due_date: '2017-12-15'
+      notes_text: Thank you for your business
+      shipping_name: Acme Inc.
+      shipping_address_1: 1 Main Street
+      shipping_address_2: Suite 600
+      shipping_postal_code: '90210'
+      shipping_city: New York
+      shipping_province: NY
+      owing_cents: 30000
+      line_item_attributes:
+        - number: '1'
+          item_number: A3947C9878
+          description: Modems
+          quantity: 40
+          unit_cost_cents: 1000
+          amount: 40000
+  LineItem:
+    type: object
+    properties:
+      number:
+        type: string
+        description: Invoice line-item number
+      description:
+        type: string
+        description: Invoice line-item description
+      quantity:
+        type: number
+        description: Invoice line-item quantity
+      unit_cost_cents:
+        type: integer
+        description: Invoice line-item unit price in cents.
+      amount:
+        type: integer
+        description: Invoice line-item total in cents.
+      balance_cents:
+        type: integer
+        description: >-
+          Line-item balance in cents. Applicable if accepting short payments at
+          line-item level.
+  PaymentImport:
+    type: object
+    required:
+      - identifier
+    properties:
+      identifier:
+        type: string
+        description: >
+          Payment identifier; must be unique within supplier. May appear
+          multiple times in a single file if payment was applied to multiple
+          invoices.
+      amount:
+        type: integer
+        description: 'The amount of total payment, in cents.'
+      date:
+        type: string
+        format: date
+        description: 'Payment date, in the format YYYY-MM-DD.'
+      currency:
+        type: string
+        description: 'Currency code, based on ISO-4217.'
+      invoice_number:
+        type: string
+        description: >
+          Invoice number associated with this payment (if payment covers single
+          invoice).
+
+          If payment covers multiple invoices, provide
+          `payment_amount_attributes` instead.
+      payment_code:
+        type: string
+        description: Payment code
+      payment_description:
+        type: string
+        description: Description corresponding to payment code.
+      payment_amount_attributes:
+        type: array
+        description: Applicable only when payment covers multiple invoices.
+        items:
+          type: object
+          properties:
+            invoice_number:
+              type: string
+              description: Invoice number associated with this payment.
+            amount:
+              type: integer
+              description: Amount paid towards this invoice.
+            notes:
+              type: string
+              description: Payment note
+            purchase_order_number:
+              type: string
+              description: Purchase order number to link this payment to an invoice.
+            ref1:
+              type: string
+              description: >-
+                An additional reference number that could link this payment to
+                an invoice. E.g. policy number, contract number, etc.
+            ref2:
+              type: string
+              description: Same as above.
+            ref3:
+              type: string
+              description: Same as above.
+      division:
+        type: string
+        description: 'Division code, if divisions are set up.'
+      customer_identifier:
+        type: string
+        description: Customer identifier.
+      customer_name:
+        type: string
+        description: Customer name.
+    example:
+      identifier: PMT001-05
+      amount: 10000
+      currency: usd
+      date: '2017-12-02'
+      customer_identifier: CUS001
+      payment_amounts_attributes:
+        - invoice_number: INV004
+          amount: 8000
+        - invoice_number: INV010
+          amount: 2000
+  FileImport:
+    type: object
+    properties:
+      id:
+        type: string
+        description: The import batch identifier.
+        example: 21877
+      file_name:
+        type: string
+        description: The original filename of the raw file.
+        example: invoices.csv
+      file_size:
+        type: integer
+        description: The original size of the raw file in bytes.
+        example: 1024
+      file_content_type:
+        type: string
+        description: The MIME/content-type of the raw file.
+        example: text/plain
+      file_fingerprint:
+        type: string
+        description: The fingerprint/hash representing the raw file contents.
+        example: bf817b5548d69f6a3a49b6bb872fb906
+      error:
+        type: string
+        description: The error message corresponding to a failed import.
+        example: ''
+      result_message:
+        type: string
+        description: Result of batch import.
+        example: 5487 invoices
+      complete_at:
+        type: string
+        description: The ISO8601 timestamp corresponding to completion of the import.
+        example: '2016-08-30T15:39:30-04:00'
+  PaymentExport:
+    type: object
+    properties:
+      payment_reference:
+        type: string
+        description: The payment identifier
+      invoice_number:
+        type: string
+        description: The display number of the invoice for which the payment was made.
+      date:
+        type: string
+        format: date
+        description: 'The payment date, in YYYY-MM-DD format.'
+      amount:
+        type: string
+        description: >-
+          The amount of the payment applied to the invoice, in dollars and
+          cents.
+      plan_fee:
+        type: string
+        description: >-
+          Payment plan fee amount, in dollars and cents, associated to this
+          invoice.
+      payment_amount:
+        type: string
+        description: The amount of the total payment.
+      payment_transaction_amount:
+        type: string
+        description: The amount of the total payment.
+      payment_method:
+        type: string
+        description: The method used to make payment.
+      payment_from_bank_account:
+        type: string
+        description: |
+          `true` if the payment was made using a bank account.
+      payment_from_credit_card:
+        type: string
+        description: |
+          `true` if the payment was made using a credit card.
+      payment_institution_name:
+        type: string
+        description: 'Institution name, if the payment was made using a bank account.'
+      payment_credit_card_brand:
+        type: string
+        description: >
+          Credit card "association brand", if the payment was made using a
+          credit card. Example: VISA, MASTER
+      short_pay_indicator:
+        type: string
+        description: |
+          `Y` if a short payment was made.
+      payment_note:
+        type: string
+        description: Note accompanying the payment.
+      auto_debit_indicator:
+        type: string
+        description: |
+          `Y` if the payment was made via AutoPay agreement.
+      invoice_balance:
+        type: string
+        description: Remaining balance on the invoice (after the payment is processed).
+      payment_timestamp:
+        type: string
+        description: The ISO8601 timestamp corresponding to payment.
+      invoice_division:
+        type: string
+        description: The division code if any associated with the invoice.
+      invoice_division_number:
+        type: string
+        description: The external division identifier if any associated with the invoice.
+      invoice_division_name:
+        type: string
+        description: The division name if any associated with the invoice.
+      pay_to_bank_account:
+        type: string
+        description: The GL number of the settlement account receiving the payment.
+      pay_to_bank_account_name:
+        type: string
+        description: The display name of the settlement account receiving the payment.
+      customer_identifier:
+        type: string
+        description: The invoice customer identifier.
+      customer_name:
+        type: string
+        description: The invoice customer name.
+      status:
+        type: string
+        description: The payment status.
+      payment_source:
+        type: string
+        description: The source of the payment.
+      payment_code:
+        type: string
+        description: >-
+          The back office payment code (applicable to externally sourced
+          payments).
+      payment_description:
+        type: string
+        description: >-
+          The back office payment description (applicable to externally sourced
+          payments).
+      gateway_authorization_code:
+        type: string
+        description: The underlying gateway authorization code.
+      purchase_order_number:
+        type: string
+        description: The purchase order number entered at the time of making a prepayment.
+      ref1:
+        type: string
+        description: >-
+          The reference number or string entered at the time of making a
+          prepayment.
+      ref2:
+        type: string
+        description: Same as above.
+      ref3:
+        type: string
+        description: Same as above.
+      short_pay_reason_identifier:
+        type: string
+        description: 'Short pay reason code, if set up.'
+      short_pay_reason:
+        type: string
+        description: 'Short pay reason description, if set up.'
+      invoice_amount_paid:
+        type: string
+        description: >-
+          The total amount of payments, in dollars and cents, made to date via
+          ARC towards this invoice.
+      invoice_identifier:
+        type: string
+        description: The identifier of the invoice for which the payment was made.
+      invoice_date:
+        type: string
+        format: date
+        description: 'Invoice date, in the format YYYY-MM-DD.'
+      invoice_external_id:
+        type: string
+        description: >-
+          The external identifier/reference, if any, of the invoice for which
+          the payment was made.
+      invoice_currency:
+        type: string
+        description: The currency of the invoice for which the payment was made.
+      invoice_purchase_order_number:
+        type: string
+        description: The purchase order number associated to the invoice.
+      invoice_ref1:
+        type: string
+        description: Reference number or string associated to the invoice.
+      invoice_ref2:
+        type: string
+        description: Same as above.
+      invoice_ref3:
+        type: string
+        description: Same as above.
+      cumulative_customer_amount:
+        type: string
+        description: >
+          The total payment processed for *this* customer under *this*
+          `payment_reference`.
+      line_item_transactional_amounts:
+        type: array
+        items:
+          type: object
+          properties:
+            line_item_number:
+              type: string
+              description: Invoice line-item number
+            line_item_payment_amount:
+              type: string
+              description: >-
+                The amount of the payment applied to the line-item, in dollars
+                and cents.
+            line_item_balance:
+              type: string
+              description: >-
+                Remaining balance on the line-item (after the payment is
+                processed), in dollars and cents.
+            line_item_short_pay_indicator:
+              type: string
+              description: |
+                `Y` if a short payment was made.
+            line_item_payment_note:
+              type: string
+              description: Note accompanying the payment at the line-item level.
+            line_item_short_pay_reason_identifier:
+              type: string
+              description: 'Short pay reason code, if set up.'
+            line_item_short_pay_reason:
+              type: string
+              description: 'Short pay reason description, if set up.'
+        description: >
+          Payments applied to invoice line-items. Applicable if accepting short
+          payments at line-item level.
+  Dispute:
+    type: object
+    properties:
+      closed_at:
+        type: string
+        format: date-time
+        description: Date and time when dispute was closed.
+      opened_at:
+        type: string
+        format: date-time
+        description: Date and time when dispute was opened.
+      opener:
+        type: string
+        description: Name or email address of the user who opened the dispute.
+      closer:
+        type: string
+        description: Name or email address of the user who closed the dispute.
+      opening_comment_text:
+        type: string
+        description: Comment text when the dispute was opened.
+      closing_comment_text:
+        type: string
+        description: Comment text when the dispute was closed.
+      invoice_number:
+        type: string
+        description: Invoice number against which dispute was opened.
+      invoice_amount_paid:
+        type: string
+        description: >-
+          The total amount of payments, in dollars and cents, made to date via
+          ARC towards this invoice.
+      invoice_balance:
+        type: object
+        description: 'Invoice balance, in cents.'
+        additionalProperties:
+          type: integer
+      dispute_reason_identifier:
+        type: string
+        description: 'Dispute reason code, if set up.'
+      dispute_reason_label_en:
+        type: string
+        description: >-
+          Dispute reason label in English. Applicable when dispute reason codes
+          are set up in the account.
+      dispute_reason_label_fr:
+        type: string
+        description: >-
+          Dispute reason label in French. Applicable when dispute reason codes
+          are set up in the account.
+      opening_comment_users_notified:
+        type: array
+        items:
+          type: string
+        description: Names or email addresses of users notified when opening dispute.
+      closing_comment_user_notified:
+        type: array
+        items:
+          type: string
+        description: >
+          Name or email addresses of users notified when closing dispute.
+
+
+          _Note: When the dispute is still open, `closing_comment_user_notified`
+          is an empty string (`""`), not an array._
+      creator_business_name:
+        type: string
+        description: Business name of the organization that `opener` represents.
+      closer_business_name:
+        type: string
+        description: Business name of the organization that `closer` represents.
+      invoice_identifier:
+        type: string
+        description: Internal unique identifier for the invoice record.
+      invoice_external_id:
+        type: string
+        description: External identifier for the invoice record.
+securityDefinitions:
+  basicAuth:
+    type: basic
+responses:
+  PreconditionFailed:
+    description: Precondition Failed
+    schema:
+      type: object
+      additionalProperties:
+        type: string
+        description: Error message
+      example:
+        email: |
+          can't be blank
+  UnauthorizedError:
+    description: Unauthorized
+    schema:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: You need to sign in or create an account before continuing.
