@@ -1,0 +1,166 @@
+swagger: '2.0'
+info:
+  description: >-
+    Documentación de los servicios HTTP / Rest / Json expuestos por OpenShift.
+    Interfaz para informar los consumos de materiales desde Geocall hacia SAP.
+    Interface sincrona.
+  version: "1.0.0"
+  title: SAP - Consumo Materiales
+# basePath: /api/rest/
+tags:
+- name: Integracion consumo de materiales contra SAP
+  description: Api expuesta en Openshift
+# basePath: /api/rest/motorola
+paths:
+  /mate/consumo:
+    post:
+      tags:
+      - SAP
+      summary: envio materiales hacia SAP
+      operationId: doPost
+      description: Consumo Materiales
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: cabecera
+        description: Datos Cabecera
+        schema:
+          $ref: '#/definitions/ConsumoRequest'
+      responses:
+        '200':
+          description: "Ejecucion exitosa"
+          schema:
+            $ref: '#/definitions/SapResponse'
+        '400':
+          description: "Bussiness Errors"
+          schema:
+            $ref: '#/definitions/SapBusinessErrorResponse'
+        '401':
+          description: "Error de autenticacion"
+          schema:
+            $ref: '#/definitions/SapError401Response'
+        '500':
+          description: "Error interno"
+          schema:
+            allOf:
+            - $ref: '#/definitions/SapError500Response'
+definitions:
+  ConsumoRequest:
+    type: object
+    properties:
+      requestID:
+        type: "string"
+      sourceSystem:
+        type: "string"
+      timestamp:
+        type: "string"
+      sapWo:
+        type: "string"
+      outcomeEndDate:
+        type: "string"
+      woExternalCode:
+        type: "string"
+      woInternalCode:
+        type: "string"
+      woType:
+        type: "string"
+      cuit:
+        type: "string"              
+      sapWarehouseCenter:
+        type: "string"
+      sapWarehouse:
+        type: "string"
+      municipality:
+        type: "string"
+      operatingCenter:
+        type: "string"
+      specificActivity:
+        type: "string"
+      funcArea:
+        type: "string"
+      costCenter:
+        type: "string"
+      division:
+        type: "string"
+      foremanIdCode:
+        type: "string"
+      materiales:
+        type: array
+        items:
+          $ref: '#/definitions/Material'
+
+  Material:
+    type: object
+    properties:
+      materialCode:
+        type: "string"
+      materialQuantity:
+        type: "string"
+      materialSerialNumber:
+        type: "string"
+      materialBatch:
+        type: "string"
+
+  SapResponse:
+    type: object
+    properties:
+      status:
+        type: "string"
+        description: "Respuesta con valor OK"
+      errorCode:
+        type: "string"
+        description: "Respuesta con valor nulo"
+      errorDescription:
+        type: "string"
+        description: "Respuesta con valor nulo"
+        
+  SapBusinessErrorResponse:
+    type: object
+    properties:
+      status:
+        type: "string"
+        description: "Respuesta con valor KO"
+      errorCode:
+        type: "string"
+        description: "Codigo Error : BusinessError"
+      errorDescription:
+        type: "string"
+        description: "Descripcion Error"
+
+  SapError401Response:
+    type: object
+    properties:
+      status:
+        type: "string"
+        description: "Respuesta con valor KO"
+      errorCode:
+        type: "string"
+        description: "Codigo Error : AuthErr"
+      errorDescription:
+        type: "string"
+        description: "Descripcion Error"
+
+  SapError500Response:
+    type: object
+    properties:
+      status:
+        type: "string"
+        description: "Respuesta con valor KO"
+      errorCode:
+        type: "string"
+        description: "Codigo Error : Internal Error"
+      errorDescription:
+        type: "string"
+        description: "Descripcion Error"
+
+# Added by API Auto Mocking Plugin
+host: virtserver.swaggerhub.com
+schemes:
+- https
+# Added by API Auto Mocking Plugin
+# basePath: /CIMATECH/newsan-motorola/1.0.0
+# Added by API Auto Mocking Plugin
+basePath: /gforrade/esb-fsm-mate-consumo/1.0.0
